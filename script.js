@@ -57,6 +57,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const employeeLogs = document.getElementById('employeeLogs');
     const recordsSearch = document.getElementById('recordsSearch');
     const logsSearch = document.getElementById('logsSearch');
+    const exportBtn = document.getElementById('exportBtn'); // New button
+    const importInput = document.getElementById('importInput'); // New file input
 
     // Verify critical elements exist
     if (!employeeNameSelect || !employeeNameInput || !recordsTableBody || !employeeLogs || !recordsSearch || !logsSearch) {
@@ -68,6 +70,37 @@ document.addEventListener('DOMContentLoaded', () => {
     // Data structure to hold ALL employees' states, daily records, and action logs
     let allEmployeeData = {};
     let currentEmployeeName = null;
+
+    // Sample data for testing across devices
+    const initializeSampleData = () => {
+        const now = new Date().getTime();
+        const yesterday = now - 24 * 60 * 60 * 1000;
+        const sampleEmployees = ['MAO SIENGMENG', 'Mary Joy M. Ochinang'];
+
+        sampleEmployees.forEach(name => {
+            if (!allEmployeeData[name]) {
+                allEmployeeData[name] = {
+                    currentSession: null,
+                    dailyRecords: [{
+                        checkInTimestamp: yesterday,
+                        checkOutTimestamp: yesterday + 9 * 60 * 60 * 1000,
+                        totalBreakDuration: 15 * 60 * 1000,
+                        netWorkDuration: 8.75 * 60 * 60 * 1000
+                    }],
+                    logs: [
+                        { timestamp: yesterday, message: `${formatDate(yesterday)} 08:00:00: Checked in at 08:00:00` },
+                        { timestamp: yesterday + 30 * 60 * 1000, message: `${formatDate(yesterday)} 08:30:00: Started break at 08:30:00` },
+                        { timestamp: yesterday + 45 * 60 * 1000, message: `${formatDate(yesterday)} 08:45:00: Ended break at 08:45:00` },
+                        { timestamp: yesterday + 9 * 60 * 60 * 1000, message: `${formatDate(yesterday)} 17:00:00: Checked out at 17:00:00` },
+                        { timestamp: now, message: `${formatDate(now)} ${formatTime(now)}: Selected ${name} at ${formatTime(now)}` }
+                    ]
+                };
+            }
+        });
+        saveAllData();
+        renderAllRecords();
+        renderEmployeeLogs();
+    };
 
     // Populate the dropdown with predefined names
     predefinedEmployeeNames.sort().forEach(name => {
@@ -221,35 +254,48 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Initialize sample logs for testing
-    const initializeSampleLogs = () => {
-        const sampleEmployees = ['MAO SIENGMENG', 'Mary Joy M. Ochinang'];
-        const now = new Date().getTime();
-        const yesterday = now - 24 * 60 * 60 * 1000;
-        
-        sampleEmployees.forEach(name => {
-            if (!allEmployeeData[name]) {
-                allEmployeeData[name] = { currentSession: null, dailyRecords: [], logs: [] };
-            }
-            if (allEmployeeData[name].logs.length === 0) {
-                allEmployeeData[name].logs = [
-                    { timestamp: yesterday, message: `${formatDate(yesterday)} 08:00:00: Checked in at 08:00:00` },
-                    { timestamp: yesterday + 30 * 60 * 1000, message: `${formatDate(yesterday)} 08:30:00: Started break at 08:30:00` },
-                    { timestamp: yesterday + 45 * 60 * 1000, message: `${formatDate(yesterday)} 08:45:00: Ended break at 08:45:00` },
-                    { timestamp: yesterday + 9 * 60 * 60 * 1000, message: `${formatDate(yesterday)} 17:00:00: Checked out at 17:00:00` },
-                    { timestamp: now, message: `${formatDate(now)} ${formatTime(now)}: Selected ${name} at ${formatTime(now)}` }
-                ];
-                allEmployeeData[name].dailyRecords = [
-                    {
-                        checkInTimestamp: yesterday,
-                        checkOutTimestamp: yesterday + 9 * 60 * 60 * 1000,
-                        totalBreakDuration: 15 * 60 * 1000,
-                        netWorkDuration: 8.75 * 60 * 60 * 1000
-                    }
-                ];
-            }
-        });
-        saveAllData();
+    // Export data to JSON file
+    const exportData = () => {
+        try {
+            const dataStr = JSON.stringify(allEmployeeData, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'records.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            alert('Data exported to records.json. Upload to GitHub to share.');
+        } catch (e) {
+            console.error('Error exporting data:', e);
+            alert('Failed to export data.');
+        }
+    };
+
+    // Import data from JSON file
+    const importData = (event) => {
+        try {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    allEmployeeData = data;
+                    saveAllData();
+                    renderAllRecords();
+                    renderEmployeeLogs();
+                    alert('Data imported successfully.');
+                } catch (err) {
+                    console.error('Error parsing imported data:', err);
+                    alert('Invalid JSON file.');
+                }
+            };
+            reader.readAsText(file);
+        } catch (e) {
+            console.error('Error importing data:', e);
+            alert('Failed to import data.');
+        }
     };
 
     // --- UI Update and Logic Functions ---
@@ -529,7 +575,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const now = new Date();
                 session.breakStartTimestamp = now.getTime();
                 if (breakStartTimeDisplay) breakStartTimeDisplay.textContent = formatTime(now.getTime());
-                addLogEntry(currentEmployeeName, `Started break at börja ${formatTime(now.getTime())}`);
+                addLogEntry(currentEmployeeName, `Started break at ${formatTime(now.getTime())}`);
                 saveAllData();
                 updateButtonStates(data);
                 alert(`${currentEmployeeName} started break at ${formatTime(now.getTime())}`);
@@ -615,11 +661,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Export/Import button listeners
+    if (exportBtn) {
+        exportBtn.addEventListener('click', exportData);
+    }
+    if (importInput) {
+        importInput.addEventListener('change', importData);
+    }
+
     // --- Initialization ---
 
     try {
         loadAllData();
-        initializeSampleLogs();
+        initializeSampleData();
 
         selectNameBtn.addEventListener('click', handleSelectEmployee);
         employeeNameInput.addEventListener('keypress', (event) => {
