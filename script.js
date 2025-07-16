@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // List of Names
+    // Predefined employee names
     const predefinedEmployeeNames = [
         "MAO SIENGMENG", "JANELSO VINAITUONG", "PHENG AN", "ROBERT IBANEZ",
         "CHHET DEVITH", "LY CHHIN THEAN", "DOUNG CHANNNUOM", "NUOM POV PICH",
@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
         "CHHUN PANHALA", "Y SENGDANA", "ROEURN CHHORK", "YEANG TEY"
     ];
 
-    // Get elements with null checks
+    // DOM elements
     const employeeNameSelect = document.getElementById('employeeNameSelect');
     const employeeNameInput = document.getElementById('employeeNameInput');
     const selectNameBtn = document.getElementById('selectNameBtn');
@@ -51,27 +51,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const totalWorkTimeDisplay = document.getElementById('totalWorkTime');
     const totalBreakTimeDisplay = document.getElementById('totalBreakTime');
     const netWorkTimeDisplay = document.getElementById('netWorkTime');
-    const recordsList = document.getElementById('recordsList');
     const recordsTableBody = document.getElementById('recordsTableBody');
-    const employeeLogsList = document.getElementById('employeeLogsList');
     const employeeLogs = document.getElementById('employeeLogs');
     const recordsSearch = document.getElementById('recordsSearch');
     const logsSearch = document.getElementById('logsSearch');
-    const exportBtn = document.getElementById('exportBtn'); // New button
-    const importInput = document.getElementById('importInput'); // New file input
+    const exportBtn = document.getElementById('exportBtn');
+    const importInput = document.getElementById('importInput');
 
-    // Verify critical elements exist
-    if (!employeeNameSelect || !employeeNameInput || !recordsTableBody || !employeeLogs || !recordsSearch || !logsSearch) {
-        console.error('One or more critical DOM elements are missing.');
-        alert('Error: Page elements are missing. Please check the HTML structure.');
+    // Verify critical elements
+    if (!employeeNameSelect || !employeeNameInput || !recordsTableBody || !employeeLogs || !recordsSearch || !logsSearch || !exportBtn || !importInput) {
+        console.error('Critical DOM elements missing.');
+        alert('Error: Page elements missing. Check HTML.');
         return;
     }
 
-    // Data structure to hold ALL employees' states, daily records, and action logs
+    // Data structure
     let allEmployeeData = {};
     let currentEmployeeName = null;
 
-    // Sample data for testing across devices
+    // Sample data for testing
     const initializeSampleData = () => {
         const now = new Date().getTime();
         const yesterday = now - 24 * 60 * 60 * 1000;
@@ -91,8 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         { timestamp: yesterday, message: `${formatDate(yesterday)} 08:00:00: Checked in at 08:00:00` },
                         { timestamp: yesterday + 30 * 60 * 1000, message: `${formatDate(yesterday)} 08:30:00: Started break at 08:30:00` },
                         { timestamp: yesterday + 45 * 60 * 1000, message: `${formatDate(yesterday)} 08:45:00: Ended break at 08:45:00` },
-                        { timestamp: yesterday + 9 * 60 * 60 * 1000, message: `${formatDate(yesterday)} 17:00:00: Checked out at 17:00:00` },
-                        { timestamp: now, message: `${formatDate(now)} ${formatTime(now)}: Selected ${name} at ${formatTime(now)}` }
+                        { timestamp: yesterday + 9 * 60 * 60 * 1000, message: `${formatDate(yesterday)} 17:00:00: Checked out at 17:00:00` }
                     ]
                 };
             }
@@ -102,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderEmployeeLogs();
     };
 
-    // Populate the dropdown with predefined names
+    // Populate dropdown
     predefinedEmployeeNames.sort().forEach(name => {
         const option = document.createElement('option');
         option.value = name;
@@ -110,9 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
         employeeNameSelect.appendChild(option);
     });
 
-    // --- Helper Functions ---
-
-    // Format a Date object or timestamp to HH:MM:SS string
+    // Helper functions
     const formatTime = (timestamp) => {
         if (!timestamp) return '--:--:--';
         try {
@@ -128,7 +123,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Format a timestamp to YYYY-MM-DD
     const formatDate = (timestamp) => {
         if (!timestamp) return 'Invalid Date';
         try {
@@ -141,18 +135,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Format duration in milliseconds to "X hours Y minutes" string
     const formatDuration = (milliseconds) => {
         if (milliseconds < 0 || isNaN(milliseconds)) milliseconds = 0;
         try {
             const totalSeconds = Math.floor(milliseconds / 1000);
             const hours = Math.floor(totalSeconds / 3600);
             const minutes = Math.floor((totalSeconds % 3600) / 60);
-
             let result = '';
-            if (hours > 0) {
-                result += `${hours} hr${hours !== 1 ? 's' : ''} `;
-            }
+            if (hours > 0) result += `${hours} hr${hours !== 1 ? 's' : ''} `;
             result += `${minutes} min${minutes !== 1 ? 's' : ''}`;
             return result.trim() || '0 min';
         } catch (e) {
@@ -161,10 +151,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Add a log entry for the current employee
     const addLogEntry = (employeeName, message) => {
         if (!employeeName || !message) {
-            console.error('Invalid parameters for addLogEntry:', { employeeName, message });
+            console.error('Invalid log parameters:', { employeeName, message });
             return;
         }
         if (!allEmployeeData[employeeName]) {
@@ -176,21 +165,14 @@ document.addEventListener('DOMContentLoaded', () => {
             message: `${formatDate(timestamp)} ${formatTime(timestamp)}: ${message}`
         });
         saveAllData();
-        if (employeeName === currentEmployeeName) {
-            renderEmployeeLogs();
-        }
+        if (employeeName === currentEmployeeName) renderEmployeeLogs();
     };
 
-    // Render logs for the current employee or filtered by search
     const renderEmployeeLogs = () => {
-        if (!employeeLogs || !employeeLogsList) {
-            console.error('employeeLogs or employeeLogsList element is missing.');
-            return;
-        }
         employeeLogs.innerHTML = '';
-        const searchTerm = logsSearch?.value.trim().toLowerCase() || '';
-
+        const searchTerm = logsSearch.value.trim().toLowerCase();
         let logsToDisplay = [];
+
         try {
             if (searchTerm) {
                 Object.keys(allEmployeeData).forEach(name => {
@@ -203,44 +185,35 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (!logsToDisplay.length) {
-                employeeLogsList.classList.add('no-logs');
-                employeeLogs.innerHTML = '<p class="no-logs">No logs available for this employee.</p>';
+                employeeLogs.innerHTML = '<p class="no-logs">No logs available.</p>';
                 return;
             }
 
-            employeeLogsList.classList.remove('no-logs');
             logsToDisplay.sort((a, b) => b.timestamp - a.timestamp).forEach(log => {
                 const li = document.createElement('li');
                 li.textContent = log.message;
                 employeeLogs.appendChild(li);
             });
         } catch (e) {
-            console.error('Error rendering employee logs:', e);
-            employeeLogsList.classList.add('no-logs');
-            employeeLogs.innerHTML = '<p class="no-logs">Error loading logs. Please try again.</p>';
+            console.error('Error rendering logs:', e);
+            employeeLogs.innerHTML = '<p class="no-logs">Error loading logs.</p>';
         }
     };
 
-    // --- LocalStorage Management ---
-
-    const LOCAL_STORAGE_KEY = 'employeeTimeTrackerAllData';
-    const LAST_SELECTED_EMPLOYEE_KEY = 'lastSelectedEmployeeManual';
-
     const saveAllData = () => {
         try {
-            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(allEmployeeData));
+            localStorage.setItem('employeeTimeTrackerAllData', JSON.stringify(allEmployeeData));
         } catch (e) {
             console.error('Error saving to localStorage:', e);
-            alert('Could not save data. Local storage might be full or blocked.');
+            alert('Could not save data. Check localStorage.');
         }
     };
 
     const loadAllData = () => {
         try {
-            const storedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+            const storedData = localStorage.getItem('employeeTimeTrackerAllData');
             if (storedData) {
                 allEmployeeData = JSON.parse(storedData);
-                // Validate data structure
                 Object.keys(allEmployeeData).forEach(name => {
                     if (!allEmployeeData[name].logs) allEmployeeData[name].logs = [];
                     if (!allEmployeeData[name].dailyRecords) allEmployeeData[name].dailyRecords = [];
@@ -249,12 +222,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (e) {
             console.error('Error loading from localStorage:', e);
-            alert('Could not load data. Local storage might be corrupted.');
+            alert('Could not load data. LocalStorage may be corrupted.');
             allEmployeeData = {};
         }
     };
 
-    // Export data to JSON file
     const exportData = () => {
         try {
             const dataStr = JSON.stringify(allEmployeeData, null, 2);
@@ -265,14 +237,13 @@ document.addEventListener('DOMContentLoaded', () => {
             a.download = 'records.json';
             a.click();
             URL.revokeObjectURL(url);
-            alert('Data exported to records.json. Upload to GitHub to share.');
+            alert('Records exported to records.json. Add to GitHub to share.');
         } catch (e) {
             console.error('Error exporting data:', e);
-            alert('Failed to export data.');
+            alert('Failed to export records.');
         }
     };
 
-    // Import data from JSON file
     const importData = (event) => {
         try {
             const file = event.target.files[0];
@@ -280,12 +251,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const reader = new FileReader();
             reader.onload = (e) => {
                 try {
-                    const data = JSON.parse(e.target.result);
-                    allEmployeeData = data;
+                    allEmployeeData = JSON.parse(e.target.result);
                     saveAllData();
                     renderAllRecords();
                     renderEmployeeLogs();
-                    alert('Data imported successfully.');
+                    alert('Records imported successfully.');
                 } catch (err) {
                     console.error('Error parsing imported data:', err);
                     alert('Invalid JSON file.');
@@ -294,24 +264,20 @@ document.addEventListener('DOMContentLoaded', () => {
             reader.readAsText(file);
         } catch (e) {
             console.error('Error importing data:', e);
-            alert('Failed to import data.');
+            alert('Failed to import records.');
         }
     };
 
-    // --- UI Update and Logic Functions ---
-
-    // Resets UI fields for the current session display
     const resetCurrentSessionUI = () => {
-        if (checkInTimeDisplay) checkInTimeDisplay.textContent = '--:--:--';
-        if (breakStartTimeDisplay) breakStartTimeDisplay.textContent = '--:--:--';
-        if (breakEndTimeDisplay) breakEndTimeDisplay.textContent = '--:--:--';
-        if (checkOutTimeDisplay) checkOutTimeDisplay.textContent = '--:--:--';
-        if (totalWorkTimeDisplay) totalWorkTimeDisplay.textContent = '0 hours 0 minutes';
-        if (totalBreakTimeDisplay) totalBreakTimeDisplay.textContent = '0 minutes';
-        if (netWorkTimeDisplay) netWorkTimeDisplay.textContent = '0 hours 0 minutes';
+        checkInTimeDisplay.textContent = '--:--:--';
+        breakStartTimeDisplay.textContent = '--:--:--';
+        breakEndTimeDisplay.textContent = '--:--:--';
+        checkOutTimeDisplay.textContent = Jekyll and Hyde';
+        totalWorkTimeDisplay.textContent = '0 hours 0 minutes';
+        totalBreakTimeDisplay.textContent = '0 minutes';
+        netWorkTimeDisplay.textContent = '0 hours 0 minutes';
     };
 
-    // Updates the UI based on the current employee's session data
     const updateCurrentSessionUI = (data) => {
         if (!data || !data.currentSession) {
             resetCurrentSessionUI();
@@ -319,90 +285,71 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         try {
             const session = data.currentSession;
-            if (checkInTimeDisplay) checkInTimeDisplay.textContent = formatTime(session.checkInTimestamp);
-            if (breakStartTimeDisplay) breakStartTimeDisplay.textContent = formatTime(session.breakStartTimestamp);
-            if (breakEndTimeDisplay) breakEndTimeDisplay.textContent = session.lastBreakEndTimestamp ? formatTime(session.lastBreakEndTimestamp) : '--:--:--';
-            if (checkOutTimeDisplay) checkOutTimeDisplay.textContent = formatTime(session.checkOutTimestamp);
+            checkInTimeDisplay.textContent = formatTime(session.checkInTimestamp);
+            breakStartTimeDisplay.textContent = formatTime(session.breakStartTimestamp);
+            breakEndTimeDisplay.textContent = formatTime(session.lastBreakEndTimestamp);
+            checkOutTimeDisplay.textContent = formatTime(session.checkOutTimestamp);
             calculateCurrentResults(session);
         } catch (e) {
-            console.error('Error updating current session UI:', e);
+            console.error('Error updating session UI:', e);
             resetCurrentSessionUI();
         }
     };
 
-    // Update individual button states
     const updateButtonStates = (data) => {
-        const isNameSelected = currentEmployeeName !== null && currentEmployeeName.trim() !== "";
-        const hasCheckedIn = data && data.currentSession && data.currentSession.checkInTimestamp !== null;
-        const onBreak = data && data.currentSession && data.currentSession.breakStartTimestamp !== null;
-        const hasCheckedOut = data && data.currentSession && data.currentSession.checkOutTimestamp !== null;
+        const isNameSelected = currentEmployeeName && currentEmployeeName.trim() !== '';
+        const hasCheckedIn = data && data.currentSession && data.currentSession.checkInTimestamp;
+        const onBreak = data && data.currentSession && data.currentSession.breakStartTimestamp;
+        const hasCheckedOut = data && data.currentSession && data.currentSession.checkOutTimestamp;
 
-        if (selectNameBtn) selectNameBtn.disabled = !isNameSelected;
-        if (checkInBtn) checkInBtn.disabled = !isNameSelected || hasCheckedIn || hasCheckedOut;
-        if (breakBtn) breakBtn.disabled = !hasCheckedIn || onBreak || hasCheckedOut;
-        if (resumeBtn) {
-            resumeBtn.disabled = !onBreak;
-            resumeBtn.style.display = onBreak ? 'inline-block' : 'none';
-        }
-        if (checkOutBtn) checkOutBtn.disabled = !hasCheckedIn || onBreak || hasCheckedOut;
+        selectNameBtn.disabled = !isNameSelected;
+        checkInBtn.disabled = !isNameSelected || hasCheckedIn || hasCheckedOut;
+        breakBtn.disabled = !hasCheckedIn || onBreak || hasCheckedOut;
+        resumeBtn.disabled = !onBreak;
+        resumeBtn.style.display = onBreak ? 'inline-block' : 'none';
+        checkOutBtn.disabled = !hasCheckedIn || onBreak || hasCheckedOut;
     };
 
-    // Renders all employee records to the table, filtered by search
     const renderAllRecords = () => {
-        if (!recordsTableBody) {
-            console.error('recordsTableBody element is missing.');
-            return;
-        }
         recordsTableBody.innerHTML = '';
-        const searchTerm = recordsSearch?.value.trim().toLowerCase() || '';
+        const searchTerm = recordsSearch.value.trim().toLowerCase();
 
         try {
-            const allKnownNames = new Set(predefinedEmployeeNames);
-            Object.keys(allEmployeeData).forEach(name => allKnownNames.add(name));
-
-            const employeeNamesToDisplay = Array.from(allKnownNames)
+            const employeeNamesToDisplay = Object.keys(allEmployeeData)
                 .filter(name => !searchTerm || name.toLowerCase().includes(searchTerm))
-                .sort((a, b) => a.localeCompare(b));
+                .sort();
 
-            const recordsAvailable = employeeNamesToDisplay.some(name => {
+            const hasRecords = employeeNamesToDisplay.some(name => {
                 const data = allEmployeeData[name];
-                return (data && data.dailyRecords && data.dailyRecords.length > 0) || (data && data.currentSession && data.currentSession.checkInTimestamp);
+                return (data.dailyRecords && data.dailyRecords.length > 0) || (data.currentSession && data.currentSession.checkInTimestamp);
             });
 
-            if (!recordsAvailable) {
-                recordsTableBody.innerHTML = `<tr><td colspan="4" class="no-records">No records found${searchTerm ? ' for "' + searchTerm + '"' : ''}. Enter a name and track time!</td></tr>`;
+            if (!hasRecords) {
+                recordsTableBody.innerHTML = `<tr><td colspan="4" class="no-records">No records found${searchTerm ? ' for "' + searchTerm + '"' : ''}.</td></tr>`;
                 return;
             }
 
             employeeNamesToDisplay.forEach(name => {
-                const employeeData = allEmployeeData[name] || { currentSession: null, dailyRecords: [] };
-                const dailyRecords = employeeData.dailyRecords || [];
-
-                if (dailyRecords.length === 0 && (!employeeData.currentSession || !employeeData.currentSession.checkInTimestamp)) {
-                    return;
-                }
+                const employeeData = allEmployeeData[name];
+                if (!employeeData || (!employeeData.dailyRecords.length && (!employeeData.currentSession || !employeeData.currentSession.checkInTimestamp))) return;
 
                 if (employeeData.currentSession && employeeData.currentSession.checkInTimestamp && !employeeData.currentSession.checkOutTimestamp) {
-                    const currentSession = employeeData.currentSession;
-                    let totalBreakDuration = currentSession.totalBreakDuration || 0;
-                    if (currentSession.breakStartTimestamp) {
-                        totalBreakDuration += (new Date().getTime() - currentSession.breakStartTimestamp);
-                    }
-                    totalBreakDuration = Math.max(0, totalBreakDuration);
+                    const session = employeeData.currentSession;
+                    let totalBreak = session.totalBreakDuration || 0;
+                    if (session.breakStartTimestamp) totalBreak += (new Date().getTime() - session.breakStartTimestamp);
+                    totalBreak = Math.max(0, totalBreak);
                     const row = document.createElement('tr');
-                    row.classList.add('current-session');
+                    row.className = 'current-session';
                     row.innerHTML = `
                         <td>${name} <span style="color: #90EE90; font-size: 0.8em;">(Current)</span></td>
-                        <td>${formatTime(currentSession.checkInTimestamp)}</td>
-                        <td>${formatDuration(totalBreakDuration)}</td>
-                        <td>${formatTime(currentSession.checkOutTimestamp)}</td>
+                        <td>${formatTime(session.checkInTimestamp)}</td>
+                        <td>${formatDuration(totalBreak)}</td>
+                        <td>${formatTime(session.checkOutTimestamp)}</td>
                     `;
                     recordsTableBody.appendChild(row);
                 }
 
-                dailyRecords.sort((a, b) => (b.checkInTimestamp || 0) - (a.checkInTimestamp || 0));
-
-                dailyRecords.forEach(day => {
+                employeeData.dailyRecords.sort((a, b) => (b.checkInTimestamp || 0) - (a.checkInTimestamp || 0)).forEach(day => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td>${name}</td>
@@ -415,301 +362,225 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         } catch (e) {
             console.error('Error rendering records:', e);
-            recordsTableBody.innerHTML = `<tr><td colspan="4" class="no-records">Error loading records. Please try again.</td></tr>`;
+            recordsTableBody.innerHTML = `<tr><td colspan="4" class="no-records">Error loading records.</td></tr>`;
         }
     };
 
-    // Calculates and displays results for the current session
     const calculateCurrentResults = (sessionData) => {
         try {
             if (!sessionData || !sessionData.checkInTimestamp) {
-                if (totalWorkTimeDisplay) totalWorkTimeDisplay.textContent = '0 hours 0 minutes';
-                if (totalBreakTimeDisplay) totalBreakTimeDisplay.textContent = '0 minutes';
-                if (netWorkTimeDisplay) netWorkTimeDisplay.textContent = '0 hours 0 minutes';
+                totalWorkTimeDisplay.textContent = '0 hours 0 minutes';
+                totalBreakTimeDisplay.textContent = '0 minutes';
+                netWorkTimeDisplay.textContent = '0 hours 0 minutes';
                 return;
             }
 
-            let totalWorkDuration = 0;
-            const effectiveEndTime = sessionData.checkOutTimestamp || new Date().getTime();
-            totalWorkDuration = effectiveEndTime - sessionData.checkInTimestamp;
+            let totalWorkDuration = (sessionData.checkOutTimestamp || new Date().getTime()) - sessionData.checkInTimestamp;
+            let totalBreakDuration = sessionData.totalBreakDuration || 0;
+            if (sessionData.breakStartTimestamp) totalBreakDuration += (new Date().getTime() - sessionData.breakStartTimestamp);
+            totalBreakDuration = Math.max(0, totalBreakDuration);
+            const netWorkDuration = Math.max(0, totalWorkDuration - totalBreakDuration);
 
-            let actualBreakDuration = sessionData.totalBreakDuration || 0;
-            if (sessionData.breakStartTimestamp && !sessionData.checkOutTimestamp) {
-                actualBreakDuration += (new Date().getTime() - sessionData.breakStartTimestamp);
-            }
-            actualBreakDuration = Math.max(0, actualBreakDuration);
-
-            let netWorkDuration = totalWorkDuration - actualBreakDuration;
-            netWorkDuration = Math.max(0, netWorkDuration);
-
-            if (totalWorkTimeDisplay) totalWorkTimeDisplay.textContent = formatDuration(totalWorkDuration);
-            if (totalBreakTimeDisplay) totalBreakTimeDisplay.textContent = formatDuration(actualBreakDuration);
-            if (netWorkTimeDisplay) netWorkTimeDisplay.textContent = formatDuration(netWorkDuration);
+            totalWorkTimeDisplay.textContent = formatDuration(totalWorkDuration);
+            totalBreakTimeDisplay.textContent = formatDuration(totalBreakDuration);
+            netWorkTimeDisplay.textContent = formatDuration(netWorkDuration);
         } catch (e) {
             console.error('Error calculating results:', e);
-            if (totalWorkTimeDisplay) totalWorkTimeDisplay.textContent = 'Error';
-            if (totalBreakTimeDisplay) totalBreakTimeDisplay.textContent = 'Error';
-            if (netWorkTimeDisplay) netWorkTimeDisplay.textContent = 'Error';
+            totalWorkTimeDisplay.textContent = 'Error';
+            totalBreakTimeDisplay.textContent = 'Error';
+            netWorkTimeDisplay.textContent = 'Error';
         }
     };
 
-    // --- Action Handlers ---
-
-    // Handles selecting an employee from the dropdown or input field
+    // Event handlers
     const handleSelectEmployee = () => {
         const inputType = document.querySelector('input[name="inputType"]:checked')?.value;
         if (!inputType) {
-            console.error('No input type selected.');
-            alert('Please select an input method (Dropdown or Manual).');
+            alert('Select an input method.');
             return;
         }
 
-        let name = '';
-        if (inputType === 'select') {
-            name = employeeNameSelect.value;
-        } else {
-            name = employeeNameInput.value.trim().toUpperCase();
-        }
-
+        let name = inputType === 'select' ? employeeNameSelect.value : employeeNameInput.value.trim().toUpperCase();
         if (!name) {
-            alert("Please select or enter an employee name.");
+            alert('Select or enter an employee name.');
             return;
         }
 
         currentEmployeeName = name;
-        if (userNameDisplay) userNameDisplay.textContent = name;
-        localStorage.setItem(LAST_SELECTED_EMPLOYEE_KEY, name);
+        userNameDisplay.textContent = name;
+        localStorage.setItem('lastSelectedEmployeeManual', name);
 
-        if (!allEmployeeData[name]) {
-            allEmployeeData[name] = { currentSession: null, dailyRecords: [], logs: [] };
-        }
+        if (!allEmployeeData[name]) allEmployeeData[name] = { currentSession: null, dailyRecords: [], logs: [] };
         addLogEntry(name, `Selected ${name} at ${formatTime(new Date().getTime())}`);
         updateCurrentSessionUI(allEmployeeData[name]);
         updateButtonStates(allEmployeeData[name]);
         renderAllRecords();
         renderEmployeeLogs();
-        alert(`Now tracking for employee: ${name}`);
     };
 
-    // Toggle between dropdown and manual input
     document.querySelectorAll('input[name="inputType"]').forEach(radio => {
         radio.addEventListener('change', () => {
             const inputType = radio.value;
-            if (inputType === 'select') {
-                employeeNameSelect.style.display = 'block';
-                employeeNameInput.style.display = 'none';
-                selectNameBtn.disabled = employeeNameSelect.value === '';
-            } else {
-                employeeNameSelect.style.display = 'none';
-                employeeNameInput.style.display = 'block';
-                selectNameBtn.disabled = employeeNameInput.value.trim() === '';
-            }
+            employeeNameSelect.style.display = inputType === 'select' ? 'block' : 'none';
+            employeeNameInput.style.display = inputType === 'manual' ? 'block' : 'none';
+            selectNameBtn.disabled = inputType === 'select' ? !employeeNameSelect.value : !employeeNameInput.value.trim();
         });
     });
 
-    // Update button state when dropdown or input changes
     employeeNameSelect.addEventListener('change', () => {
-        selectNameBtn.disabled = employeeNameSelect.value === '';
+        selectNameBtn.disabled = !employeeNameSelect.value;
     });
 
     employeeNameInput.addEventListener('input', () => {
-        selectNameBtn.disabled = employeeNameInput.value.trim() === '';
+        selectNameBtn.disabled = !employeeNameInput.value.trim();
     });
 
-    // Search handlers with debouncing
     let searchTimeout = null;
-    const debounceSearch = (callback, delay = 300) => {
+    const debounceSearch = (callback) => {
         clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(callback, delay);
+        searchTimeout = setTimeout(callback, 300);
     };
 
-    if (recordsSearch) {
-        recordsSearch.addEventListener('input', () => {
-            debounceSearch(() => renderAllRecords());
-        });
-    }
+    recordsSearch.addEventListener('input', () => debounceSearch(renderAllRecords));
+    logsSearch.addEventListener('input', () => debounceSearch(renderEmployeeLogs));
 
-    if (logsSearch) {
-        logsSearch.addEventListener('input', () => {
-            debounceSearch(() => renderEmployeeLogs());
-        });
-    }
-
-    // Button event listeners
-    if (checkInBtn) {
-        checkInBtn.addEventListener('click', () => {
-            if (!currentEmployeeName) {
-                alert("Please select an employee first by selecting or typing their name and clicking 'Select Name'.");
-                return;
-            }
-            const data = allEmployeeData[currentEmployeeName];
-            if (!data.currentSession || !data.currentSession.checkInTimestamp) {
-                const now = new Date();
-                data.currentSession = {
-                    checkInTimestamp: now.getTime(),
-                    breakStartTimestamp: null,
-                    totalBreakDuration: 0,
-                    lastBreakEndTimestamp: null,
-                    checkOutTimestamp: null
-                };
-                if (checkInTimeDisplay) checkInTimeDisplay.textContent = formatTime(now.getTime());
-                addLogEntry(currentEmployeeName, `Checked in at ${formatTime(now.getTime())}`);
-                saveAllData();
-                updateButtonStates(data);
-                calculateCurrentResults(data.currentSession);
-                renderAllRecords();
-                alert(`${currentEmployeeName} checked in at ${formatTime(now.getTime())}`);
-            }
-        });
-    }
-
-    if (breakBtn) {
-        breakBtn.addEventListener('click', () => {
-            if (!currentEmployeeName) {
-                alert("Please select an employee first.");
-                return;
-            }
-            const data = allEmployeeData[currentEmployeeName];
-            const session = data.currentSession;
-            if (session && session.checkInTimestamp && !session.breakStartTimestamp && !session.checkOutTimestamp) {
-                const now = new Date();
-                session.breakStartTimestamp = now.getTime();
-                if (breakStartTimeDisplay) breakStartTimeDisplay.textContent = formatTime(now.getTime());
-                addLogEntry(currentEmployeeName, `Started break at ${formatTime(now.getTime())}`);
-                saveAllData();
-                updateButtonStates(data);
-                alert(`${currentEmployeeName} started break at ${formatTime(now.getTime())}`);
-            } else if (!session || !session.checkInTimestamp) {
-                alert("Please check in first.");
-            } else if (session.checkOutTimestamp) {
-                alert("Employee has already checked out.");
-            }
-        });
-    }
-
-    if (resumeBtn) {
-        resumeBtn.addEventListener('click', () => {
-            if (!currentEmployeeName) {
-                alert("Please select an employee first.");
-                return;
-            }
-            const data = allEmployeeData[currentEmployeeName];
-            const session = data.currentSession;
-            if (session && session.breakStartTimestamp) {
-                const now = new Date();
-                session.lastBreakEndTimestamp = now.getTime();
-                session.totalBreakDuration += (session.lastBreakEndTimestamp - session.breakStartTimestamp);
-                session.breakStartTimestamp = null;
-                if (breakEndTimeDisplay) breakEndTimeDisplay.textContent = formatTime(now.getTime());
-                addLogEntry(currentEmployeeName, `Ended break at ${formatTime(now.getTime())}`);
-                saveAllData();
-                updateButtonStates(data);
-                calculateCurrentResults(session);
-                alert(`${currentEmployeeName} ended break at ${formatTime(now.getTime())}`);
-            } else {
-                alert("Employee is not currently on break.");
-            }
-        });
-    }
-
-    if (checkOutBtn) {
-        checkOutBtn.addEventListener('click', () => {
-            if (!currentEmployeeName) {
-                alert("Please select an employee first.");
-                return;
-            }
-            const data = allEmployeeData[currentEmployeeName];
-            const session = data.currentSession;
-
-            if (session && session.breakStartTimestamp) {
-                alert("Please end your break before checking out!");
-                return;
-            }
-            if (session && session.checkInTimestamp && !session.checkOutTimestamp) {
-                const now = new Date();
-                session.checkOutTimestamp = now.getTime();
-
-                const totalWork = session.checkOutTimestamp - session.checkInTimestamp;
-                const netWork = totalWork - (session.totalBreakDuration || 0);
-
-                if (!data.dailyRecords) data.dailyRecords = [];
-                data.dailyRecords.push({
-                    checkInTimestamp: session.checkInTimestamp,
-                    checkOutTimestamp: session.checkOutTimestamp,
-                    totalBreakDuration: session.totalBreakDuration || 0,
-                    netWorkDuration: netWork
-                });
-
-                addLogEntry(currentEmployeeName, `Checked out at ${formatTime(now.getTime())}`);
-                data.currentSession = null;
-                if (checkOutTimeDisplay) checkOutTimeDisplay.textContent = formatTime(now.getTime());
-                saveAllData();
-                calculateCurrentResults(null);
-                updateButtonStates(data);
-                renderAllRecords();
-                renderEmployeeLogs();
-                alert(`${currentEmployeeName} checked out at ${formatTime(now.getTime())}. Net Work: ${formatDuration(netWork)}`);
-                if (userNameDisplay) userNameDisplay.textContent = "-- Not Selected --";
-                currentEmployeeName = null;
-                employeeNameSelect.value = '';
-                employeeNameInput.value = '';
-            } else if (!session || !session.checkInTimestamp) {
-                alert("Employee has not checked in yet.");
-            } else if (session.checkOutTimestamp) {
-                alert("Employee has already checked out for today.");
-            }
-        });
-    }
-
-    // Export/Import button listeners
-    if (exportBtn) {
-        exportBtn.addEventListener('click', exportData);
-    }
-    if (importInput) {
-        importInput.addEventListener('change', importData);
-    }
-
-    // --- Initialization ---
-
-    try {
-        loadAllData();
-        initializeSampleData();
-
-        selectNameBtn.addEventListener('click', handleSelectEmployee);
-        employeeNameInput.addEventListener('keypress', (event) => {
-            if (event.key === 'Enter') {
-                handleSelectEmployee();
-            }
-        });
-
-        const lastSelectedName = localStorage.getItem(LAST_SELECTED_EMPLOYEE_KEY);
-        if (lastSelectedName) {
-            if (predefinedEmployeeNames.includes(lastSelectedName)) {
-                employeeNameSelect.value = lastSelectedName;
-            } else {
-                employeeNameInput.value = lastSelectedName;
-                document.querySelector('input[name="inputType"][value="manual"]').checked = true;
-                employeeNameSelect.style.display = 'none';
-                employeeNameInput.style.display = 'block';
-            }
-            handleSelectEmployee();
-        } else {
-            resetCurrentSessionUI();
-            updateButtonStates(null);
-            if (userNameDisplay) userNameDisplay.textContent = "-- Not Selected --";
-            renderEmployeeLogs();
+    checkInBtn.addEventListener('click', () => {
+        if (!currentEmployeeName) {
+            alert('Select an employee first.');
+            return;
         }
+        const data = allEmployeeData[currentEmployeeName];
+        if (!data.currentSession || !data.currentSession.checkInTimestamp) {
+            const now = new Date().getTime();
+            data.currentSession = {
+                checkInTimestamp: now,
+                breakStartTimestamp: null,
+                totalBreakDuration: 0,
+                lastBreakEndTimestamp: null,
+                checkOutTimestamp: null
+            };
+            checkInTimeDisplay.textContent = formatTime(now);
+            addLogEntry(currentEmployeeName, `Checked in at ${formatTime(now)}`);
+            saveAllData();
+            updateButtonStates(data);
+            calculateCurrentResults(data.currentSession);
+            renderAllRecords();
+        }
+    });
 
-        renderAllRecords();
+    breakBtn.addEventListener('click', () => {
+        if (!currentEmployeeName) {
+            alert('Select an employee first.');
+            return;
+        }
+        const data = allEmployeeData[currentEmployeeName];
+        const session = data.currentSession;
+        if (session && session.checkInTimestamp && !session.breakStartTimestamp && !session.checkOutTimestamp) {
+            const now = new Date().getTime();
+            session.breakStartTimestamp = now;
+            breakStartTimeDisplay.textContent = formatTime(now);
+            addLogEntry(currentEmployeeName, `Started break at ${formatTime(now)}`);
+            saveAllData();
+            updateButtonStates(data);
+        } else {
+            alert('Cannot start break. Check employee status.');
+        }
+    });
 
-        setInterval(() => {
-            if (currentEmployeeName && allEmployeeData[currentEmployeeName]?.currentSession?.checkInTimestamp && !allEmployeeData[currentEmployeeName]?.currentSession?.checkOutTimestamp) {
-                calculateCurrentResults(allEmployeeData[currentEmployeeName].currentSession);
-                renderAllRecords();
-            }
-        }, 1000);
-    } catch (e) {
-        console.error('Initialization error:', e);
-        alert('Error initializing the application. Please refresh the page.');
+    resumeBtn.addEventListener('click', () => {
+        if (!currentEmployeeName) {
+            alert('Select an employee first.');
+            return;
+        }
+        const data = allEmployeeData[currentEmployeeName];
+        const session = data.currentSession;
+        if (session && session.breakStartTimestamp) {
+            const now = new Date().getTime();
+            session.lastBreakEndTimestamp = now;
+            session.totalBreakDuration += (now - session.breakStartTimestamp);
+            session.breakStartTimestamp = null;
+            breakEndTimeDisplay.textContent = formatTime(now);
+            addLogEntry(currentEmployeeName, `Ended break at ${formatTime(now)}`);
+            saveAllData();
+            updateButtonStates(data);
+            calculateCurrentResults(session);
+        } else {
+            alert('Not on break.');
+        }
+    });
+
+    checkOutBtn.addEventListener('click', () => {
+        if (!currentEmployeeName) {
+            alert('Select an employee first.');
+            return;
+        }
+        const data = allEmployeeData[currentEmployeeName];
+        const session = data.currentSession;
+        if (session && session.breakStartTimestamp) {
+            alert('End your break before checking out.');
+            return;
+        }
+        if (session && session.checkInTimestamp && !session.checkOutTimestamp) {
+            const now = new Date().getTime();
+            session.checkOutTimestamp = now;
+            const totalWork = now - session.checkInTimestamp;
+            const netWork = totalWork - (session.totalBreakDuration || 0);
+            data.dailyRecords.push({
+                checkInTimestamp: session.checkInTimestamp,
+                checkOutTimestamp: now,
+                totalBreakDuration: session.totalBreakDuration || 0,
+                netWorkDuration: netWork
+            });
+            addLogEntry(currentEmployeeName, `Checked out at ${formatTime(now)}`);
+            data.currentSession = null;
+            checkOutTimeDisplay.textContent = formatTime(now);
+            saveAllData();
+            calculateCurrentResults(null);
+            updateButtonStates(data);
+            renderAllRecords();
+            renderEmployeeLogs();
+            userNameDisplay.textContent = '-- Not Selected --';
+            currentEmployeeName = null;
+            employeeNameSelect.value = '';
+            employeeNameInput.value = '';
+        } else {
+            alert('Cannot check out. Check employee status.');
+        }
+    });
+
+    exportBtn.addEventListener('click', exportData);
+    importInput.addEventListener('change', importData);
+
+    // Initialization
+    loadAllData();
+    initializeSampleData();
+    selectNameBtn.addEventListener('click', handleSelectEmployee);
+    employeeNameInput.addEventListener('keypress', (event) => {
+        if (event.key === 'Enter') handleSelectEmployee();
+    });
+
+    const lastSelectedName = localStorage.getItem('lastSelectedEmployeeManual');
+    if (lastSelectedName) {
+        if (predefinedEmployeeNames.includes(lastSelectedName)) {
+            employeeNameSelect.value = lastSelectedName;
+        } else {
+            employeeNameInput.value = lastSelectedName;
+            document.querySelector('input[name="inputType"][value="manual"]').checked = true;
+            employeeNameSelect.style.display = 'none';
+            employeeNameInput.style.display = 'block';
+        }
+        handleSelectEmployee();
+    } else {
+        resetCurrentSessionUI();
+        updateButtonStates(null);
+        userNameDisplay.textContent = '-- Not Selected --';
+        renderEmployeeLogs();
     }
+
+    setInterval(() => {
+        if (currentEmployeeName && allEmployeeData[currentEmployeeName]?.currentSession?.checkInTimestamp && !allEmployeeData[currentEmployeeName]?.currentSession?.checkOutTimestamp) {
+            calculateCurrentResults(allEmployeeData[currentEmployeeName].currentSession);
+            renderAllRecords();
+        }
+    }, 1000);
 });
