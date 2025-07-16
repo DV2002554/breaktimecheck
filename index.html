@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Time Tracker - Manual Entry & History</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="main-wrapper">
+        <div class="records-panel">
+            <h2>All Employee Records</h2>
+            <input type="text" id="recordsSearch" class="search-input" placeholder="Search by employee name...">
+            <div class="records-list" id="recordsList">
+                <table id="recordsTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Check-in</th>
+                            <th>Total Break</th>
+                            <th>Check-out</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recordsTableBody">
+                        <tr>
+                            <td colspan="4" class="no-records">No records yet. Enter a name and track time!</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <h2>Employee Action Log</h2>
+            <input type="text" id="logsSearch" class="search-input" placeholder="Search by employee name...">
+            <div class="logs-list" id="employeeLogsList">
+                <p class="no-logs">Select an employee to view their action log.</p>
+                <ul id="employeeLogs"></ul>
+            </div>
+        </div>
+
+        <div class="tracker-panel">
+            <h1>Work Time Tracker</h1>
+
+            <div class="name-selection-area">
+                <label for="employeeNameSelect">Select or Enter Employee Name:</label>
+                <div class="input-toggle">
+                    <label><input type="radio" name="inputType" value="select" checked> Use Dropdown</label>
+                    <label><input type="radio" name="inputType" value="manual"> Manual Entry</label>
+                </div>
+                <select id="employeeNameSelect" class="custom-input">
+                    <option value="" disabled selected>Select an employee</option>
+                </select>
+                <input type="text" id="employeeNameInput" class="custom-input" placeholder="e.g., DAVIT" style="display: none;">
+                <button id="selectNameBtn" class="btn primary small-btn">Select Name</button>
+                <p>Current Employee: <span id="userName">-- Not Selected --</span></p>
+            </div>
+
+            <div class="card">
+                <h2>Current Session Status</h2>
+                <p>Check-in Time: <span id="checkInTime">--:--:--</span></p>
+                <p>Break Start: <span id="breakStartTime">--:--:--</span></p>
+                <p>Break End: <span id="breakEndTime">--:--:--</span></p>
+                <p>Check-out Time: <span id="checkOutTime">--:--:--</span></p>
+            </div>
+
+            <div class="controls">
+                <button id="checkInBtn" class="btn primary">Check In</button>
+                <button id="breakBtn" class="btn info">Start Break</button>
+                <button id="resumeBtn" class="btn info" style="display: none;">End Break</button>
+                <button id="checkOutBtn" class="btn danger">Check Out</button>
+            </div>
+
+            <div class="card result-card">
+                <h2>Today's Summary</h2>
+                <p>Total Work Time: <span id="totalWorkTime">0 hours 0 minutes</span></p>
+                <p>Total Break Time: <span id="totalBreakTime">0 minutes</span></p>
+                <p>Net Work Time (Cash In): <span id="netWorkTime">0 hours 0 minutes</span></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
