@@ -35,33 +35,36 @@ document.addEventListener('DOMContentLoaded', () => {
         "CHHUN PANHALA", "Y SENGDANA", "ROEURN CHHORK", "YEANG TEY"
     ];
 
-    // DOM elements
-    const employeeNameSelect = document.getElementById('employeeNameSelect');
-    const employeeNameInput = document.getElementById('employeeNameInput');
-    const selectNameBtn = document.getElementById('selectNameBtn');
-    const userNameDisplay = document.getElementById('userName');
-    const checkInBtn = document.getElementById('checkInBtn');
-    const breakBtn = document.getElementById('breakBtn');
-    const resumeBtn = document.getElementById('resumeBtn');
-    const checkOutBtn = document.getElementById('checkOutBtn');
-    const checkInTimeDisplay = document.getElementById('checkInTime');
-    const breakStartTimeDisplay = document.getElementById('breakStartTime');
-    const breakEndTimeDisplay = document.getElementById('breakEndTime');
-    const checkOutTimeDisplay = document.getElementById('checkOutTime');
-    const totalWorkTimeDisplay = document.getElementById('totalWorkTime');
-    const totalBreakTimeDisplay = document.getElementById('totalBreakTime');
-    const netWorkTimeDisplay = document.getElementById('netWorkTime');
-    const recordsTableBody = document.getElementById('recordsTableBody');
-    const employeeLogs = document.getElementById('employeeLogs');
-    const recordsSearch = document.getElementById('recordsSearch');
-    const logsSearch = document.getElementById('logsSearch');
-    const exportBtn = document.getElementById('exportBtn');
-    const importInput = document.getElementById('importInput');
+    // DOM elements with null checks
+    const elements = {
+        employeeNameSelect: document.getElementById('employeeNameSelect'),
+        employeeNameInput: document.getElementById('employeeNameInput'),
+        selectNameBtn: document.getElementById('selectNameBtn'),
+        userNameDisplay: document.getElementById('userName'),
+        checkInBtn: document.getElementById('checkInBtn'),
+        breakBtn: document.getElementById('breakBtn'),
+        resumeBtn: document.getElementById('resumeBtn'),
+        checkOutBtn: document.getElementById('checkOutBtn'),
+        checkInTimeDisplay: document.getElementById('checkInTime'),
+        breakStartTimeDisplay: document.getElementById('breakStartTime'),
+        breakEndTimeDisplay: document.getElementById('breakEndTime'),
+        checkOutTimeDisplay: document.getElementById('checkOutTime'),
+        totalWorkTimeDisplay: document.getElementById('totalWorkTime'),
+        totalBreakTimeDisplay: document.getElementById('totalBreakTime'),
+        netWorkTimeDisplay: document.getElementById('netWorkTime'),
+        recordsTableBody: document.getElementById('recordsTableBody'),
+        employeeLogs: document.getElementById('employeeLogs'),
+        recordsSearch: document.getElementById('recordsSearch'),
+        logsSearch: document.getElementById('logsSearch'),
+        exportBtn: document.getElementById('exportBtn'),
+        importInput: document.getElementById('importInput')
+    };
 
-    // Verify critical elements
-    if (!employeeNameSelect || !employeeNameInput || !recordsTableBody || !employeeLogs || !recordsSearch || !logsSearch || !exportBtn || !importInput) {
-        console.error('Critical DOM elements missing.');
-        alert('Error: Page elements missing. Check HTML.');
+    // Check for missing elements
+    const missingElements = Object.keys(elements).filter(key => !elements[key]);
+    if (missingElements.length) {
+        console.error('Missing DOM elements:', missingElements);
+        alert('Error: Missing page elements. Check HTML structure.');
         return;
     }
 
@@ -104,7 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const option = document.createElement('option');
         option.value = name;
         option.textContent = name;
-        employeeNameSelect.appendChild(option);
+        elements.employeeNameSelect.appendChild(option);
     });
 
     // Helper functions
@@ -169,8 +172,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const renderEmployeeLogs = () => {
-        employeeLogs.innerHTML = '';
-        const searchTerm = logsSearch.value.trim().toLowerCase();
+        elements.employeeLogs.innerHTML = '';
+        const searchTerm = elements.logsSearch.value.trim().toLowerCase();
         let logsToDisplay = [];
 
         try {
@@ -185,18 +188,18 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (!logsToDisplay.length) {
-                employeeLogs.innerHTML = '<p class="no-logs">No logs available.</p>';
+                elements.employeeLogs.innerHTML = '<p class="no-logs">No logs available.</p>';
                 return;
             }
 
             logsToDisplay.sort((a, b) => b.timestamp - a.timestamp).forEach(log => {
                 const li = document.createElement('li');
                 li.textContent = log.message;
-                employeeLogs.appendChild(li);
+                elements.employeeLogs.appendChild(li);
             });
         } catch (e) {
             console.error('Error rendering logs:', e);
-            employeeLogs.innerHTML = '<p class="no-logs">Error loading logs.</p>';
+            elements.employeeLogs.innerHTML = '<p class="no-logs">Error loading logs.</p>';
         }
     };
 
@@ -240,7 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Records exported to records.json. Add to GitHub to share.');
         } catch (e) {
             console.error('Error exporting data:', e);
-            alert('Failed to export records.');
+            alert('Failed to export records. Check console for details.');
         }
     };
 
@@ -258,24 +261,28 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert('Records imported successfully.');
                 } catch (err) {
                     console.error('Error parsing imported data:', err);
-                    alert('Invalid JSON file.');
+                    alert('Invalid JSON file. Check file format.');
                 }
+            };
+            reader.onerror = () => {
+                console.error('Error reading file');
+                alert('Failed to read file.');
             };
             reader.readAsText(file);
         } catch (e) {
             console.error('Error importing data:', e);
-            alert('Failed to import records.');
+            alert('Failed to import records. Check console for details.');
         }
     };
 
     const resetCurrentSessionUI = () => {
-        checkInTimeDisplay.textContent = '--:--:--';
-        breakStartTimeDisplay.textContent = '--:--:--';
-        breakEndTimeDisplay.textContent = '--:--:--';
-        checkOutTimeDisplay.textContent = Jekyll and Hyde';
-        totalWorkTimeDisplay.textContent = '0 hours 0 minutes';
-        totalBreakTimeDisplay.textContent = '0 minutes';
-        netWorkTimeDisplay.textContent = '0 hours 0 minutes';
+        elements.checkInTimeDisplay.textContent = '--:--:--';
+        elements.breakStartTimeDisplay.textContent = '--:--:--';
+        elements.breakEndTimeDisplay.textContent = '--:--:--';
+        elements.checkOutTimeDisplay.textContent = '--:--:--';
+        elements.totalWorkTimeDisplay.textContent = '0 hours 0 minutes';
+        elements.totalBreakTimeDisplay.textContent = '0 minutes';
+        elements.netWorkTimeDisplay.textContent = '0 hours 0 minutes';
     };
 
     const updateCurrentSessionUI = (data) => {
@@ -285,10 +292,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         try {
             const session = data.currentSession;
-            checkInTimeDisplay.textContent = formatTime(session.checkInTimestamp);
-            breakStartTimeDisplay.textContent = formatTime(session.breakStartTimestamp);
-            breakEndTimeDisplay.textContent = formatTime(session.lastBreakEndTimestamp);
-            checkOutTimeDisplay.textContent = formatTime(session.checkOutTimestamp);
+            elements.checkInTimeDisplay.textContent = formatTime(session.checkInTimestamp);
+            elements.breakStartTimeDisplay.textContent = formatTime(session.breakStartTimestamp);
+            elements.breakEndTimeDisplay.textContent = formatTime(session.lastBreakEndTimestamp);
+            elements.checkOutTimeDisplay.textContent = formatTime(session.checkOutTimestamp);
             calculateCurrentResults(session);
         } catch (e) {
             console.error('Error updating session UI:', e);
@@ -302,17 +309,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const onBreak = data && data.currentSession && data.currentSession.breakStartTimestamp;
         const hasCheckedOut = data && data.currentSession && data.currentSession.checkOutTimestamp;
 
-        selectNameBtn.disabled = !isNameSelected;
-        checkInBtn.disabled = !isNameSelected || hasCheckedIn || hasCheckedOut;
-        breakBtn.disabled = !hasCheckedIn || onBreak || hasCheckedOut;
-        resumeBtn.disabled = !onBreak;
-        resumeBtn.style.display = onBreak ? 'inline-block' : 'none';
-        checkOutBtn.disabled = !hasCheckedIn || onBreak || hasCheckedOut;
+        elements.selectNameBtn.disabled = !isNameSelected;
+        elements.checkInBtn.disabled = !isNameSelected || hasCheckedIn || hasCheckedOut;
+        elements.breakBtn.disabled = !hasCheckedIn || onBreak || hasCheckedOut;
+        elements.resumeBtn.disabled = !onBreak;
+        elements.resumeBtn.style.display = onBreak ? 'inline-block' : 'none';
+        elements.checkOutBtn.disabled = !hasCheckedIn || onBreak || hasCheckedOut;
     };
 
     const renderAllRecords = () => {
-        recordsTableBody.innerHTML = '';
-        const searchTerm = recordsSearch.value.trim().toLowerCase();
+        elements.recordsTableBody.innerHTML = '';
+        const searchTerm = elements.recordsSearch.value.trim().toLowerCase();
 
         try {
             const employeeNamesToDisplay = Object.keys(allEmployeeData)
@@ -325,7 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (!hasRecords) {
-                recordsTableBody.innerHTML = `<tr><td colspan="4" class="no-records">No records found${searchTerm ? ' for "' + searchTerm + '"' : ''}.</td></tr>`;
+                elements.recordsTableBody.innerHTML = `<tr><td colspan="4" class="no-records">No records found${searchTerm ? ' for "' + searchTerm + '"' : ''}.</td></tr>`;
                 return;
             }
 
@@ -346,7 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <td>${formatDuration(totalBreak)}</td>
                         <td>${formatTime(session.checkOutTimestamp)}</td>
                     `;
-                    recordsTableBody.appendChild(row);
+                    elements.recordsTableBody.appendChild(row);
                 }
 
                 employeeData.dailyRecords.sort((a, b) => (b.checkInTimestamp || 0) - (a.checkInTimestamp || 0)).forEach(day => {
@@ -357,21 +364,21 @@ document.addEventListener('DOMContentLoaded', () => {
                         <td>${formatDuration(day.totalBreakDuration)}</td>
                         <td>${formatTime(day.checkOutTimestamp)}</td>
                     `;
-                    recordsTableBody.appendChild(row);
+                    elements.recordsTableBody.appendChild(row);
                 });
             });
         } catch (e) {
             console.error('Error rendering records:', e);
-            recordsTableBody.innerHTML = `<tr><td colspan="4" class="no-records">Error loading records.</td></tr>`;
+            elements.recordsTableBody.innerHTML = `<tr><td colspan="4" class="no-records">Error loading records.</td></tr>`;
         }
     };
 
     const calculateCurrentResults = (sessionData) => {
         try {
             if (!sessionData || !sessionData.checkInTimestamp) {
-                totalWorkTimeDisplay.textContent = '0 hours 0 minutes';
-                totalBreakTimeDisplay.textContent = '0 minutes';
-                netWorkTimeDisplay.textContent = '0 hours 0 minutes';
+                elements.totalWorkTimeDisplay.textContent = '0 hours 0 minutes';
+                elements.totalBreakTimeDisplay.textContent = '0 minutes';
+                elements.netWorkTimeDisplay.textContent = '0 hours 0 minutes';
                 return;
             }
 
@@ -381,14 +388,14 @@ document.addEventListener('DOMContentLoaded', () => {
             totalBreakDuration = Math.max(0, totalBreakDuration);
             const netWorkDuration = Math.max(0, totalWorkDuration - totalBreakDuration);
 
-            totalWorkTimeDisplay.textContent = formatDuration(totalWorkDuration);
-            totalBreakTimeDisplay.textContent = formatDuration(totalBreakDuration);
-            netWorkTimeDisplay.textContent = formatDuration(netWorkDuration);
+            elements.totalWorkTimeDisplay.textContent = formatDuration(totalWorkDuration);
+            elements.totalBreakTimeDisplay.textContent = formatDuration(totalBreakDuration);
+            elements.netWorkTimeDisplay.textContent = formatDuration(netWorkDuration);
         } catch (e) {
             console.error('Error calculating results:', e);
-            totalWorkTimeDisplay.textContent = 'Error';
-            totalBreakTimeDisplay.textContent = 'Error';
-            netWorkTimeDisplay.textContent = 'Error';
+            elements.totalWorkTimeDisplay.textContent = 'Error';
+            elements.totalBreakTimeDisplay.textContent = 'Error';
+            elements.netWorkTimeDisplay.textContent = 'Error';
         }
     };
 
@@ -400,14 +407,14 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        let name = inputType === 'select' ? employeeNameSelect.value : employeeNameInput.value.trim().toUpperCase();
+        let name = inputType === 'select' ? elements.employeeNameSelect.value : elements.employeeNameInput.value.trim().toUpperCase();
         if (!name) {
             alert('Select or enter an employee name.');
             return;
         }
 
         currentEmployeeName = name;
-        userNameDisplay.textContent = name;
+        elements.userNameDisplay.textContent = name;
         localStorage.setItem('lastSelectedEmployeeManual', name);
 
         if (!allEmployeeData[name]) allEmployeeData[name] = { currentSession: null, dailyRecords: [], logs: [] };
@@ -421,18 +428,18 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('input[name="inputType"]').forEach(radio => {
         radio.addEventListener('change', () => {
             const inputType = radio.value;
-            employeeNameSelect.style.display = inputType === 'select' ? 'block' : 'none';
-            employeeNameInput.style.display = inputType === 'manual' ? 'block' : 'none';
-            selectNameBtn.disabled = inputType === 'select' ? !employeeNameSelect.value : !employeeNameInput.value.trim();
+            elements.employeeNameSelect.style.display = inputType === 'select' ? 'block' : 'none';
+            elements.employeeNameInput.style.display = inputType === 'manual' ? 'block' : 'none';
+            elements.selectNameBtn.disabled = inputType === 'select' ? !elements.employeeNameSelect.value : !elements.employeeNameInput.value.trim();
         });
     });
 
-    employeeNameSelect.addEventListener('change', () => {
-        selectNameBtn.disabled = !employeeNameSelect.value;
+    elements.employeeNameSelect.addEventListener('change', () => {
+        elements.selectNameBtn.disabled = !elements.employeeNameSelect.value;
     });
 
-    employeeNameInput.addEventListener('input', () => {
-        selectNameBtn.disabled = !employeeNameInput.value.trim();
+    elements.employeeNameInput.addEventListener('input', () => {
+        elements.selectNameBtn.disabled = !elements.employeeNameInput.value.trim();
     });
 
     let searchTimeout = null;
@@ -441,10 +448,10 @@ document.addEventListener('DOMContentLoaded', () => {
         searchTimeout = setTimeout(callback, 300);
     };
 
-    recordsSearch.addEventListener('input', () => debounceSearch(renderAllRecords));
-    logsSearch.addEventListener('input', () => debounceSearch(renderEmployeeLogs));
+    elements.recordsSearch.addEventListener('input', () => debounceSearch(renderAllRecords));
+    elements.logsSearch.addEventListener('input', () => debounceSearch(renderEmployeeLogs));
 
-    checkInBtn.addEventListener('click', () => {
+    elements.checkInBtn.addEventListener('click', () => {
         if (!currentEmployeeName) {
             alert('Select an employee first.');
             return;
@@ -459,7 +466,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 lastBreakEndTimestamp: null,
                 checkOutTimestamp: null
             };
-            checkInTimeDisplay.textContent = formatTime(now);
+            elements.checkInTimeDisplay.textContent = formatTime(now);
             addLogEntry(currentEmployeeName, `Checked in at ${formatTime(now)}`);
             saveAllData();
             updateButtonStates(data);
@@ -468,7 +475,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    breakBtn.addEventListener('click', () => {
+    elements.breakBtn.addEventListener('click', () => {
         if (!currentEmployeeName) {
             alert('Select an employee first.');
             return;
@@ -478,7 +485,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (session && session.checkInTimestamp && !session.breakStartTimestamp && !session.checkOutTimestamp) {
             const now = new Date().getTime();
             session.breakStartTimestamp = now;
-            breakStartTimeDisplay.textContent = formatTime(now);
+            elements.breakStartTimeDisplay.textContent = formatTime(now);
             addLogEntry(currentEmployeeName, `Started break at ${formatTime(now)}`);
             saveAllData();
             updateButtonStates(data);
@@ -487,7 +494,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    resumeBtn.addEventListener('click', () => {
+    elements.resumeBtn.addEventListener('click', () => {
         if (!currentEmployeeName) {
             alert('Select an employee first.');
             return;
@@ -499,7 +506,7 @@ document.addEventListener('DOMContentLoaded', () => {
             session.lastBreakEndTimestamp = now;
             session.totalBreakDuration += (now - session.breakStartTimestamp);
             session.breakStartTimestamp = null;
-            breakEndTimeDisplay.textContent = formatTime(now);
+            elements.breakEndTimeDisplay.textContent = formatTime(now);
             addLogEntry(currentEmployeeName, `Ended break at ${formatTime(now)}`);
             saveAllData();
             updateButtonStates(data);
@@ -509,7 +516,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    checkOutBtn.addEventListener('click', () => {
+    elements.checkOutBtn.addEventListener('click', () => {
         if (!currentEmployeeName) {
             alert('Select an employee first.');
             return;
@@ -533,54 +540,59 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             addLogEntry(currentEmployeeName, `Checked out at ${formatTime(now)}`);
             data.currentSession = null;
-            checkOutTimeDisplay.textContent = formatTime(now);
+            elements.checkOutTimeDisplay.textContent = formatTime(now);
             saveAllData();
             calculateCurrentResults(null);
             updateButtonStates(data);
             renderAllRecords();
             renderEmployeeLogs();
-            userNameDisplay.textContent = '-- Not Selected --';
+            elements.userNameDisplay.textContent = '-- Not Selected --';
             currentEmployeeName = null;
-            employeeNameSelect.value = '';
-            employeeNameInput.value = '';
+            elements.employeeNameSelect.value = '';
+            elements.employeeNameInput.value = '';
         } else {
             alert('Cannot check out. Check employee status.');
         }
     });
 
-    exportBtn.addEventListener('click', exportData);
-    importInput.addEventListener('change', importData);
+    elements.exportBtn.addEventListener('click', exportData);
+    elements.importInput.addEventListener('change', importData);
 
     // Initialization
-    loadAllData();
-    initializeSampleData();
-    selectNameBtn.addEventListener('click', handleSelectEmployee);
-    employeeNameInput.addEventListener('keypress', (event) => {
-        if (event.key === 'Enter') handleSelectEmployee();
-    });
+    try {
+        loadAllData();
+        initializeSampleData();
+        elements.selectNameBtn.addEventListener('click', handleSelectEmployee);
+        elements.employeeNameInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') handleSelectEmployee();
+        });
 
-    const lastSelectedName = localStorage.getItem('lastSelectedEmployeeManual');
-    if (lastSelectedName) {
-        if (predefinedEmployeeNames.includes(lastSelectedName)) {
-            employeeNameSelect.value = lastSelectedName;
+        const lastSelectedName = localStorage.getItem('lastSelectedEmployeeManual');
+        if (lastSelectedName) {
+            if (predefinedEmployeeNames.includes(lastSelectedName)) {
+                elements.employeeNameSelect.value = lastSelectedName;
+            } else {
+                elements.employeeNameInput.value = lastSelectedName;
+                document.querySelector('input[name="inputType"][value="manual"]').checked = true;
+                elements.employeeNameSelect.style.display = 'none';
+                elements.employeeNameInput.style.display = 'block';
+            }
+            handleSelectEmployee();
         } else {
-            employeeNameInput.value = lastSelectedName;
-            document.querySelector('input[name="inputType"][value="manual"]').checked = true;
-            employeeNameSelect.style.display = 'none';
-            employeeNameInput.style.display = 'block';
+            resetCurrentSessionUI();
+            updateButtonStates(null);
+            elements.userNameDisplay.textContent = '-- Not Selected --';
+            renderEmployeeLogs();
         }
-        handleSelectEmployee();
-    } else {
-        resetCurrentSessionUI();
-        updateButtonStates(null);
-        userNameDisplay.textContent = '-- Not Selected --';
-        renderEmployeeLogs();
-    }
 
-    setInterval(() => {
-        if (currentEmployeeName && allEmployeeData[currentEmployeeName]?.currentSession?.checkInTimestamp && !allEmployeeData[currentEmployeeName]?.currentSession?.checkOutTimestamp) {
-            calculateCurrentResults(allEmployeeData[currentEmployeeName].currentSession);
-            renderAllRecords();
-        }
-    }, 1000);
+        setInterval(() => {
+            if (currentEmployeeName && allEmployeeData[currentEmployeeName]?.currentSession?.checkInTimestamp && !allEmployeeData[currentEmployeeName]?.currentSession?.checkOutTimestamp) {
+                calculateCurrentResults(allEmployeeData[currentEmployeeName].currentSession);
+                renderAllRecords();
+            }
+        }, 1000);
+    } catch (e) {
+        console.error('Initialization error:', e);
+        alert('Error initializing app. Check console and refresh.');
+    }
 });
