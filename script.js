@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const SERVER_URL = 'http://localhost:5000'; // Update with your IP if needed
+    const SERVER_URL = 'http://192.168.90.24:5000'; // Updated to match server
 
     const sendToServer = async (name, action, time) => {
         try {

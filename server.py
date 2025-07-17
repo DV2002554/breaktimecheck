@@ -1,13 +1,15 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import datetime
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
 # Google Sheets setup
 SCOPE = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-CREDENTIALS_FILE = "auto.json"  # Path to your JSON key file
+CREDENTIALS_FILE = "auto.json"
 SPREADSHEET_ID = "1Hd2TbGozRvRqJKpnpKa3CDF_X_V9wXNYt5aXivHbats"
 SHEET_NAME = "Record"
 
@@ -48,4 +50,4 @@ def get_records():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=5000, debug=True)
