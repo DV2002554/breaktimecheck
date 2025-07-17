@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 .filter(record => !searchTerm || record.Name.toLowerCase().includes(searchTerm))
                 .map(record => ({
                     timestamp: new Date(record.Timestamp).getTime(),
-                    message: `${record.Timestamp}: ${record.Action} at ${record.Time}`
+                    message: `${record.Timestamp}: ${record.Name} - ${record.Action} at ${record.Time}` // MODIFIED: Added record.Name
                 }));
 
             if (!logsToDisplay.length) {
