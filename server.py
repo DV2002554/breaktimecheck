@@ -1,9 +1,5 @@
 # server.py
-# This version adds staff history view: Select a staff name and click "View Staff History" to see all past records for that staff.
-# Date picker for viewing daily records for all staff on a specific date.
-# Actions (check in/out, breaks) are always for the current day.
-# Multiple users can access the URL to see and update records simultaneously.
-# No login required; all users see all records as per your requirement.
+# Save and run as described in previous messages.
 
 from flask import Flask, render_template, request, jsonify
 import sqlite3
