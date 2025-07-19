@@ -8,48 +8,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"> <!-- For icons -->
     <style>
         body { 
-            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff; 
             padding: 40px; 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            position: relative;
-            overflow: hidden; /* To contain the background */
-            color: #fff;
-        }
-        .fire-background {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: linear-gradient(orange, black);
-            background-color: #000;
-            z-index: -1;
-            overflow: hidden;
-        }
-        .bubble {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background-color: rgba(255, 0, 0, 0.5);
-            border-radius: 50%;
-            animation: float cubic-bezier(0.215, 0.610, 0.355, 1) infinite;
-        }
-        @keyframes float {
-            0% {
-                transform: translateY(0) rotate(0);
-            }
-            40% {
-                border: 2px yellow;
-            }
-            70% {
-                background-image: radial-gradient(rgb(255, 230, 0), red);
-            }
-            100% {
-                transform: translateY(-100vh) rotate(360deg);
-                background-color: yellow;
-                width: 40px;
-                height: 40px;
-            }
         }
         .container { 
             max-width: 1300px; 
@@ -59,8 +21,6 @@
             border-radius: 15px; 
             box-shadow: 0 8px 20px rgba(0,0,0,0.2); 
             color: #333;
-            position: relative;
-            z-index: 1;
         }
         h1 { 
             text-align: center; 
@@ -89,10 +49,10 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 10px rgba(0,0,0,0.15);
         }
-        .btn-success { background: #28a745; border: none; }
+        .btn-primary { background: #007bff; border: none; }
         .btn-warning { background: #ffc107; border: none; color: #333; }
         .btn-danger { background: #dc3545; border: none; }
-        .btn-info { background: #17a2b8; border: none; }
+        .btn-success { background: #28a745; border: none; }
         table { 
             margin-top: 30px; 
             border-radius: 10px;
@@ -121,26 +81,19 @@
         }
         /* Add some animations */
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
         .container {
             animation: fadeIn 1s ease-in-out;
         }
-        button i {
-            margin-right: 8px;
-        }
-        #datePicker {
-            max-width: 200px;
-        }
     </style>
 </head>
 <body>
-    <div class="fire-background" id="fireBackground"></div>
     <div class="container">
         <h1>Staff Attendance System</h1>
         <div class="form-group">
-            <label for="staff">Select Staff for Actions (type to search):</label>
+            <label for="staff">Select Staff (type to search):</label>
             <input type="text" list="staffList" id="staff" class="form-control" placeholder="Type name to search..." autocomplete="off">
             <datalist id="staffList">
                 {% for name in staff_names %}
@@ -152,11 +105,7 @@
         <button class="btn btn-warning" onclick="performAction('start_break')"><i class="fas fa-coffee"></i> Start Break</button>
         <button class="btn btn-warning" onclick="performAction('end_break')"><i class="fas fa-play"></i> End Break</button>
         <button class="btn btn-danger" onclick="performAction('check_out')"><i class="fas fa-sign-out-alt"></i> Check Out</button>
-        <h2 class="mt-4">Daily Records</h2>
-        <div class="form-group">
-            <label for="datePicker">Select Date for Daily Records:</label>
-            <input type="date" id="datePicker" class="form-control" value="{{ today }}">
-        </div>
+        <h2 class="mt-4">Records for {{ today }}</h2>
         <div class="table-responsive">
             <table id="recordsTable" class="table table-striped table-bordered">
                 <thead class="thead-dark">
@@ -171,43 +120,8 @@
                 <tbody></tbody>
             </table>
         </div>
-        <h2 class="mt-4">Staff History Log</h2>
-        <div class="form-group">
-            <label for="historyStaff">Select Staff for History (type to search):</label>
-            <input type="text" list="staffList" id="historyStaff" class="form-control" placeholder="Type name for history..." autocomplete="off">
-        </div>
-        <button class="btn btn-info" onclick="loadStaffHistory()"><i class="fas fa-history"></i> View Staff History</button>
-        <div class="table-responsive mt-3">
-            <table id="historyTable" class="table table-striped table-bordered">
-                <thead class="thead-dark">
-                    <tr>
-                        <th>Date</th>
-                        <th>Check In</th>
-                        <th>Check Out</th>
-                        <th>Break Count</th>
-                        <th>Total Break (min)</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
     </div>
     <script>
-        // Fire background animation
-        const fireBackground = document.getElementById('fireBackground');
-        for (let i = 0; i < 100; i++) {  // Create 100 bubbles for lively effect
-            const bubble = document.createElement('div');
-            bubble.classList.add('bubble');
-            bubble.style.left = Math.random() * 100 + '%';
-            bubble.style.bottom = '0';  // Start from bottom
-            bubble.style.animationDuration = Math.random() * 3 + 2 + 's';  // 2-5 seconds
-            bubble.style.animationDelay = Math.random() * 5 + 's';
-            fireBackground.appendChild(bubble);
-        }
-
-        const datePicker = document.getElementById('datePicker');
-        datePicker.addEventListener('change', loadRecords);
-
         function performAction(action) {
             const nameInput = document.getElementById('staff');
             const name = nameInput.value.trim();
@@ -226,7 +140,7 @@
                 return response.json();
             }).then(data => {
                 if (data.success) {
-                    loadRecords();  // Reload daily records after action
+                    loadRecords();
                     alert(`${action.replace('_', ' ').toUpperCase()} successful for ${name}`);
                     nameInput.value = '';  // Clear input after success
                 } else {
@@ -234,13 +148,12 @@
                 }
             }).catch(error => {
                 console.error('Fetch error:', error);
-                alert('Error performing action: ' + error.message + '. Ensure the server is running.');
+                alert('Error performing action: ' + error.message + '. This is usually because the server is not running or the page was opened as a local file. Run "python attendance_system.py" and access http://127.0.0.1:5000.');
             });
         }
 
         function loadRecords() {
-            const selectedDate = datePicker.value;
-            fetch(`/records?date=${selectedDate}`)
+            fetch('/records')
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`HTTP error! Status: ${response.status}`);
@@ -263,46 +176,13 @@
                     });
                 }).catch(error => {
                     console.error('Error loading records:', error);
-                    alert('Error loading records: ' + error.message + '. Ensure the server is running.');
-                });
-        }
-
-        function loadStaffHistory() {
-            const name = document.getElementById('historyStaff').value.trim();
-            if (!name) {
-                alert('Please select a staff name for history.');
-                return;
-            }
-            fetch(`/staff_history?name=${encodeURIComponent(name)}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! Status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    const tbody = document.querySelector('#historyTable tbody');
-                    tbody.innerHTML = '';
-                    data.forEach(row => {
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td>${row[0]}</td>
-                            <td>${row[1] || 'Not checked in'}</td>
-                            <td>${row[2] || 'Not checked out'}</td>
-                            <td>${row[3]}</td>
-                            <td>${row[4].toFixed(2)}</td>
-                        `;
-                        tbody.appendChild(tr);
-                    });
-                }).catch(error => {
-                    console.error('Error loading history:', error);
-                    alert('Error loading history: ' + error.message + '. Ensure the server is running.');
+                    alert('Error loading records: ' + error.message + '. Ensure the server is running at http://127.0.0.1:5000.');
                 });
         }
 
         // Load records on page load
         loadRecords();
-        // Auto-refresh daily records every 30 seconds
+        // Auto-refresh records every 30 seconds
         setInterval(loadRecords, 30000);
     </script>
 </body>
