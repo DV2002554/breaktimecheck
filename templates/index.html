@@ -6,133 +6,121 @@
     <title>Staff Attendance System</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"> <!-- For icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { 
-            margin: 0;
-            padding: 40px; 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            position: relative;
-            overflow: hidden; /* To contain the background */
-            color: #fff;
-            background: black;
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+        :root {
+            --primary-color: #4CAF50; /* Green */
+            --secondary-color: #2196F3; /* Blue */
+            --accent-color: #FFC107; /* Amber */
+            --danger-color: #F44336; /* Red */
+            --info-color: #00BCD4; /* Cyan */
+            --text-color: #333;
+            --light-text-color: #666;
+            --bg-light: #f7f9fc;
+            --bg-dark: #e0e6ec;
+            --card-bg: #ffffff;
+            --border-color: #e0e0e0;
+            --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.1);
+            --shadow-medium: 0 8px 25px rgba(0, 0, 0, 0.15);
         }
-        .fire-background {
-            position: absolute;
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--text-color);
+            overflow-x: hidden; /* Prevent horizontal scroll from animation */
+            background: linear-gradient(135deg, #a7b7c7, #c4d0d9, #dfe9f0); /* Base gradient */
+        }
+
+        /* Background Animation */
+        .background-animation {
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
+            background: linear-gradient(45deg, #a7b7c7, #c4d0d9, #dfe9f0, #e9f2f7, #f0f7fb);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
             z-index: -1;
-            overflow: hidden;
-            display: flex;
-            justify-content: space-around;
-            align-items: flex-end;
         }
-        .fire-container {
-            margin: 0 10px;
-            width: 60px;
-            height: 60px;
-            position: relative;
-            transform-origin: center bottom;
-            animation-name: flicker;
-            animation-duration: 3ms;
-            animation-delay: 200ms;
-            animation-timing-function: ease-in;
-            animation-iteration-count: infinite;
-            animation-direction: alternate;
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
-        .flame{
-            bottom:0;
-            position:absolute;
-            border-bottom-right-radius: 50%;
-            border-bottom-left-radius: 50%;
-            border-top-left-radius: 50%;
-            transform:rotate(-45deg) scale(1.5,1.5);
-        }
-        .yellow{
-            left:15px;
-            width: 30px;
-            height: 30px;
-            background:gold;
-            box-shadow: 0px 0px 9px 4px gold;
-        }
-        .orange{
-            left:10px;
-            width: 40px;
-            height: 40px;
-            background:orange;
-            box-shadow: 0px 0px 9px 4px orange;
-        }
-        .red{
-            left:5px;
-            width: 50px;
-            height: 50px;
-            background:OrangeRed;
-            box-shadow: 0px 0px 5px 4px OrangeRed;
-        }
-        .white{
-            left:15px;
-            bottom:-4px;
-            width: 30px;
-            height: 30px;
-            background:white;
-            box-shadow: 0px 0px 9px 4px white;
-        }
-        .circle{
-            border-radius: 50%;
-            position:absolute;
-        }
-        .blue{
-            width: 10px;
-            height: 10px;
-            left:25px;
-            bottom:-25px;
-            background: SlateBlue;
-            box-shadow: 0px 0px 15px 10px SlateBlue;
-        }
-        .black{
-            width: 40px;
-            height: 40px;
-            left:10px;
-            bottom:-60px;
-            background: black;
-            box-shadow: 0px 0px 15px 10px black;
-        }
-        @keyframes flicker{
-            0%   {transform: rotate(-1deg);}
-            20%  {transform: rotate(1deg);}
-            40%  {transform: rotate(-1deg);}
-            60%  {transform: rotate(1deg) scaleY(1.04);}
-            80%  {transform: rotate(-2deg) scaleY(0.92);}
-            100% {transform: rotate(1deg);}
-        }
-        .container { 
-            max-width: 1300px; 
-            margin: 0 auto; 
-            background: rgba(255, 255, 255, 0.95); 
-            padding: 40px; 
-            border-radius: 15px; 
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2); 
-            color: #333;
-            position: relative;
+
+
+        .container {
+            background-color: var(--card-bg);
+            padding: 40px 50px;
+            border-radius: 15px;
+            box-shadow: var(--shadow-medium);
+            width: 100%;
+            max-width: 1600px; /* Increased for bigger dashboard */
+            box-sizing: border-box;
+            position: relative; /* For z-index to be above background */
             z-index: 1;
+            animation: fadeIn 1s ease-out;
         }
-        h1 { 
-            text-align: center; 
-            color: #4a4a4a; 
-            margin-bottom: 40px;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 2px;
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
+
+        h1, h2 {
+            color: var(--secondary-color);
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            letter-spacing: 1px;
+        }
+
+        h2 {
+            font-size: 1.8em;
+            margin-top: 40px;
+        }
+
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .col-md-4 {
+            flex: 0 0 30%;
+            max-width: 30%;
+            padding: 0 15px;
+        }
+
+        .col-md-8 {
+            flex: 0 0 70%;
+            max-width: 70%;
+            padding: 0 15px;
+        }
+
         .form-group { 
             margin-bottom: 30px; 
         }
+
         .form-control {
             border-radius: 20px;
             padding: 15px;
             box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
         }
+
         button { 
             margin-right: 15px; 
             padding: 12px 25px;
@@ -140,192 +128,142 @@
             font-weight: bold;
             transition: all 0.3s ease;
         }
+
         button:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 10px rgba(0,0,0,0.15);
         }
+
         .btn-success { background: #28a745; border: none; }
         .btn-warning { background: #ffc107; border: none; color: #333; }
         .btn-danger { background: #dc3545; border: none; }
         .btn-info { background: #17a2b8; border: none; }
+
         table { 
             margin-top: 30px; 
             border-radius: 10px;
             overflow: hidden;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
+
         thead.thead-dark {
             background: #343a40;
             color: white;
         }
+
         th, td {
             vertical-align: middle;
             padding: 15px;
+            word-wrap: break-word; /* Added to wrap long content */
+            max-width: 300px; /* Prevent too wide cells */
         }
+
         tbody tr:nth-child(odd) {
             background: #f8f9fa;
         }
+
         tbody tr:hover {
             background: #e9ecef;
             transition: background 0.3s;
         }
+
         /* Scrollable table for many rows */
         .table-responsive {
             max-height: 600px;
             overflow-y: auto;
         }
+
         /* Add some animations */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
         .container {
             animation: fadeIn 1s ease-in-out;
         }
+
         button i {
             margin-right: 8px;
         }
+
         #datePicker {
             max-width: 200px;
+        }
+
+        #dailySearchInput, #historySearchInput {
+            max-width: 300px;
+            margin-bottom: 15px;
         }
     </style>
 </head>
 <body>
-    <div class="fire-background">
-        <!-- Multiple flames for background effect -->
-        <div class="fire-container">
-            <div class="flame red"></div>
-            <div class="flame orange"></div>
-            <div class="flame yellow"></div>
-            <div class="flame white"></div>
-            <div class="circle blue"></div>
-            <div class="circle black"></div>
-        </div>
-        <div class="fire-container" style="animation-delay: 100ms;">
-            <div class="flame red"></div>
-            <div class="flame orange"></div>
-            <div class="flame yellow"></div>
-            <div class="flame white"></div>
-            <div class="circle blue"></div>
-            <div class="circle black"></div>
-        </div>
-        <div class="fire-container" style="animation-delay: 300ms;">
-            <div class="flame red"></div>
-            <div class="flame orange"></div>
-            <div class="flame yellow"></div>
-            <div class="flame white"></div>
-            <div class="circle blue"></div>
-            <div class="circle black"></div>
-        </div>
-        <div class="fire-container" style="animation-delay: 50ms;">
-            <div class="flame red"></div>
-            <div class="flame orange"></div>
-            <div class="flame yellow"></div>
-            <div class="flame white"></div>
-            <div class="circle blue"></div>
-            <div class="circle black"></div>
-        </div>
-        <div class="fire-container" style="animation-delay: 400ms;">
-            <div class="flame red"></div>
-            <div class="flame orange"></div>
-            <div class="flame yellow"></div>
-            <div class="flame white"></div>
-            <div class="circle blue"></div>
-            <div class="circle black"></div>
-        </div>
-        <div class="fire-container" style="animation-delay: 150ms;">
-            <div class="flame red"></div>
-            <div class="flame orange"></div>
-            <div class="flame yellow"></div>
-            <div class="flame white"></div>
-            <div class="circle blue"></div>
-            <div class="circle black"></div>
-        </div>
-        <div class="fire-container" style="animation-delay: 250ms;">
-            <div class="flame red"></div>
-            <div class="flame orange"></div>
-            <div class="flame yellow"></div>
-            <div class="flame white"></div>
-            <div class="circle blue"></div>
-            <div class="circle black"></div>
-        </div>
-        <div class="fire-container" style="animation-delay: 350ms;">
-            <div class="flame red"></div>
-            <div class="flame orange"></div>
-            <div class="flame yellow"></div>
-            <div class="flame white"></div>
-            <div class="circle blue"></div>
-            <div class="circle black"></div>
-        </div>
-        <div class="fire-container" style="animation-delay: 450ms;">
-            <div class="flame red"></div>
-            <div class="flame orange"></div>
-            <div class="flame yellow"></div>
-            <div class="flame white"></div>
-            <div class="circle blue"></div>
-            <div class="circle black"></div>
-        </div>
-        <!-- Add even more if needed for fuller coverage -->
-    </div>
+    <div class="background-animation"></div>
     <div class="container">
         <h1>Staff Attendance System</h1>
-        <div class="form-group">
-            <label for="staff">Select Staff for Actions (type to search):</label>
-            <input type="text" list="staffList" id="staff" class="form-control" placeholder="Type name to search..." autocomplete="off">
-            <datalist id="staffList">
-                {% for name in staff_names %}
-                    <option value="{{ name }}">{{ name }}</option>
-                {% endfor %}
-            </datalist>
-        </div>
-        <button class="btn btn-success" onclick="performAction('check_in')"><i class="fas fa-sign-in-alt"></i> Check In</button>
-        <button class="btn btn-warning" onclick="performAction('start_break')"><i class="fas fa-coffee"></i> Start Break</button>
-        <button class="btn btn-warning" onclick="performAction('end_break')"><i class="fas fa-play"></i> End Break</button>
-        <button class="btn btn-danger" onclick="performAction('check_out')"><i class="fas fa-sign-out-alt"></i> Check Out</button>
-        <h2 class="mt-4">Daily Records</h2>
-        <div class="form-group">
-            <label for="datePicker">Select Date for Daily Records:</label>
-            <input type="date" id="datePicker" class="form-control" value="{{ today }}">
-        </div>
-        <div class="table-responsive">
-            <table id="recordsTable" class="table table-striped table-bordered">
-                <thead class="thead-dark">
-                    <tr>
-                        <th>Name</th>
-                        <th>Check In</th>
-                        <th>Check Out</th>
-                        <th>Break Count</th>
-                        <th>Total Break (min)</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
-        <h2 class="mt-4">Staff History Log</h2>
-        <div class="form-group">
-            <label for="historyStaff">Select Staff for History (type to search):</label>
-            <input type="text" list="staffList" id="historyStaff" class="form-control" placeholder="Type name for history..." autocomplete="off">
-        </div>
-        <button class="btn btn-info" onclick="loadStaffHistory()"><i class="fas fa-history"></i> View Staff History</button>
-        <div class="table-responsive mt-3">
-            <table id="historyTable" class="table table-striped table-bordered">
-                <thead class="thead-dark">
-                    <tr>
-                        <th>Date</th>
-                        <th>Check In</th>
-                        <th>Check Out</th>
-                        <th>Break Count</th>
-                        <th>Total Break (min)</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
+        <div class="row">
+            <div class="col-md-4">
+                <h2>Staff History Log</h2>
+                <div class="form-group">
+                    <label for="historyStaff">Select Staff for History (type to search):</label>
+                    <input type="text" list="staffList" id="historyStaff" class="form-control" placeholder="Type name for history..." autocomplete="off">
+                </div>
+                <button class="btn btn-info" onclick="loadStaffHistory()"><i class="fas fa-history"></i> View Staff History</button>
+                <input type="text" id="historySearchInput" class="form-control mt-2" placeholder="Search by date or name...">
+                <div class="table-responsive mt-3">
+                    <table id="historyTable" class="table table-striped table-bordered">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>Date</th>
+                                <th>Check In</th>
+                                <th>Check Out</th>
+                                <th>Break Count</th>
+                                <th>Total Break (min)</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="form-group">
+                    <label for="staff">Select Staff for Actions (type to search):</label>
+                    <input type="text" list="staffList" id="staff" class="form-control" placeholder="Type name to search..." autocomplete="off">
+                    <datalist id="staffList">
+                        {% for name in staff_names %}
+                            <option value="{{ name }}">{{ name }}</option>
+                        {% endfor %}
+                    </datalist>
+                </div>
+                <button class="btn btn-success" onclick="performAction('check_in')"><i class="fas fa-sign-in-alt"></i> Check In</button>
+                <button class="btn btn-warning" onclick="performAction('start_break')"><i class="fas fa-coffee"></i> Start Break</button>
+                <button class="btn btn-warning" onclick="performAction('end_break')"><i class="fas fa-play"></i> End Break</button>
+                <button class="btn btn-danger" onclick="performAction('check_out')"><i class="fas fa-sign-out-alt"></i> Check Out</button>
+                <h2 class="mt-4">Daily Records</h2>
+                <div class="form-group">
+                    <label for="datePicker">Select Date for Daily Records:</label>
+                    <input type="date" id="datePicker" class="form-control" value="{{ today }}">
+                    <button class="btn btn-info mt-2" onclick="loadRecords()">Load Records</button>
+                    <input type="text" id="dailySearchInput" class="form-control mt-2" placeholder="Search by name...">
+                </div>
+                <div class="table-responsive">
+                    <table id="recordsTable" class="table table-striped table-bordered">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>Name</th>
+                                <th>Check In</th>
+                                <th>Check Out</th>
+                                <th>Break Count</th>
+                                <th>Total Break (min)</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
     <script>
-        const datePicker = document.getElementById('datePicker');
-        datePicker.addEventListener('change', loadRecords);
-
         function performAction(action) {
             const nameInput = document.getElementById('staff');
             const name = nameInput.value.trim();
@@ -344,7 +282,6 @@
                 return response.json();
             }).then(data => {
                 if (data.success) {
-                    loadRecords();  // Reload daily records after action
                     alert(`${action.replace('_', ' ').toUpperCase()} successful for ${name}`);
                     nameInput.value = '';  // Clear input after success
                 } else {
@@ -357,7 +294,7 @@
         }
 
         function loadRecords() {
-            const selectedDate = datePicker.value;
+            const selectedDate = document.getElementById('datePicker').value;
             fetch(`/records?date=${selectedDate}`)
                 .then(response => {
                     if (!response.ok) {
@@ -379,6 +316,7 @@
                         `;
                         tbody.appendChild(tr);
                     });
+                    filterTable('dailySearchInput', 'recordsTable');
                 }).catch(error => {
                     console.error('Error loading records:', error);
                     alert('Error loading records: ' + error.message + '. Ensure the server is running.');
@@ -412,16 +350,38 @@
                         `;
                         tbody.appendChild(tr);
                     });
+                    filterTable('historySearchInput', 'historyTable');
                 }).catch(error => {
                     console.error('Error loading history:', error);
                     alert('Error loading history: ' + error.message + '. Ensure the server is running.');
                 });
         }
 
-        // Load records on page load
-        loadRecords();
-        // Auto-refresh daily records every 30 seconds
-        setInterval(loadRecords, 30000);
+        function filterTable(inputId, tableId) {
+            const input = document.getElementById(inputId);
+            const filter = input.value.toUpperCase();
+            const table = document.getElementById(tableId);
+            const tr = table.getElementsByTagName('tr');
+            for (let i = 1; i < tr.length; i++) {  // Skip header row
+                let visible = false;
+                const td = tr[i].getElementsByTagName('td');
+                for (let j = 0; j < td.length; j++) {
+                    if (td[j] && td[j].textContent.toUpperCase().indexOf(filter) > -1) {
+                        visible = true;
+                        break;
+                    }
+                }
+                tr[i].style.display = visible ? "" : "none";
+            }
+        }
+
+        document.getElementById('dailySearchInput').addEventListener('keyup', () => filterTable('dailySearchInput', 'recordsTable'));
+        document.getElementById('historySearchInput').addEventListener('keyup', () => filterTable('historySearchInput', 'historyTable'));
+
+        // Load records on page load (optional, or remove if only on button)
+        // loadRecords();
+        // Auto-refresh daily records every 30 seconds (comment if not needed)
+        // setInterval(loadRecords, 30000);
     </script>
 </body>
 </html>

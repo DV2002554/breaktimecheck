@@ -1,9 +1,13 @@
 # server.py
 # Save and run as described in previous messages.
+# Added pytz for timezone handling (GMT+7, Asia/Bangkok).
+# Added checks for check_in (only if not already checked in without check out) and start_break (only if not already on break).
+# Added /status route to get current status for frontend button disabling.
 
 from flask import Flask, render_template, request, jsonify
 import sqlite3
 from datetime import datetime
+import pytz  # For GMT+7 timezone
 
 app = Flask(__name__)
 
@@ -38,6 +42,9 @@ STAFF_NAMES = sorted([
     "ROEURN CHHORK", "YEANG TEY"
 ])
 
+# Timezone for GMT+7 (Asia/Bangkok)
+TZ = pytz.timezone('Asia/Bangkok')
+
 # Initialize database
 def init_db():
     conn = sqlite3.connect('attendance.db')
@@ -64,7 +71,7 @@ def get_or_create_row(name, date):
 
 @app.route('/')
 def index():
-    today = datetime.now().date().isoformat()
+    today = datetime.now(TZ).date().isoformat()
     for name in STAFF_NAMES:
         get_or_create_row(name, today)
     return render_template('index.html', staff_names=STAFF_NAMES, today=today)
@@ -76,30 +83,39 @@ def action():
     if name not in STAFF_NAMES:
         return jsonify(success=False, message="Invalid staff name")
     act = data['action']
-    now = datetime.now().isoformat()
-    today = datetime.now().date().isoformat()
+    now = datetime.now(TZ).isoformat()
+    today = datetime.now(TZ).date().isoformat()
 
     get_or_create_row(name, today)  # Ensure row exists for today
 
     conn = sqlite3.connect('attendance.db')
     c = conn.cursor()
 
+    # Check current status
+    c.execute("SELECT check_in, check_out, current_break_start FROM attendance WHERE name = ? AND date = ?", (name, today))
+    row = c.fetchone()
+    check_in = row[0]
+    check_out = row[1]
+    current_break_start = row[2]
+
     if act == 'check_in':
+        if check_in and not check_out:
+            conn.close()
+            return jsonify(success=False, message="Not checked out yet. Please check out first.")
         c.execute("UPDATE attendance SET check_in = ? WHERE name = ? AND date = ?", (now, name, today))
     elif act == 'check_out':
         c.execute("UPDATE attendance SET check_out = ? WHERE name = ? AND date = ?", (now, name, today))
     elif act == 'start_break':
+        if current_break_start:
+            conn.close()
+            return jsonify(success=False, message="Break not yet ended. Please end break first.")
         c.execute("UPDATE attendance SET current_break_start = ?, break_count = break_count + 1 WHERE name = ? AND date = ?", (now, name, today))
     elif act == 'end_break':
-        c.execute("SELECT current_break_start FROM attendance WHERE name = ? AND date = ?", (name, today))
-        start = c.fetchone()[0]
-        if start:
-            break_time = (datetime.fromisoformat(now) - datetime.fromisoformat(start)).total_seconds() / 60  # minutes
-            c.execute("UPDATE attendance SET total_break = total_break + ?, current_break_start = NULL WHERE name = ? AND date = ?", (break_time, name, today))
-        else:
-            conn.commit()
+        if not current_break_start:
             conn.close()
             return jsonify(success=False, message="No active break to end")
+        break_time = (datetime.fromisoformat(now) - datetime.fromisoformat(current_break_start)).total_seconds() / 60  # minutes
+        c.execute("UPDATE attendance SET total_break = total_break + ?, current_break_start = NULL WHERE name = ? AND date = ?", (break_time, name, today))
 
     conn.commit()
     conn.close()
@@ -107,12 +123,12 @@ def action():
 
 @app.route('/records')
 def records():
-    date = request.args.get('date', datetime.now().date().isoformat())
+    date = request.args.get('date', datetime.now(TZ).date().isoformat())
     conn = sqlite3.connect('attendance.db')
     c = conn.cursor()
     c.execute("SELECT name, check_in, check_out, break_count, total_break FROM attendance WHERE date = ? ORDER BY name", (date,))
     rows = c.fetchall()
-    # Format timestamps for response
+    # Format timestamps for response (already in TZ since stored as such)
     formatted_rows = []
     for row in rows:
         check_in = datetime.fromisoformat(row[1]).strftime('%Y-%m-%d %H:%M:%S') if row[1] else None
@@ -138,6 +154,25 @@ def staff_history():
         formatted_rows.append([row[0], check_in, check_out, row[3], row[4]])
     conn.close()
     return jsonify(formatted_rows)
+
+@app.route('/status')
+def status():
+    name = request.args.get('name')
+    if not name:
+        return jsonify({})
+    today = datetime.now(TZ).date().isoformat()
+    conn = sqlite3.connect('attendance.db')
+    c = conn.cursor()
+    c.execute("SELECT check_in, check_out, current_break_start FROM attendance WHERE name = ? AND date = ?", (name, today))
+    row = c.fetchone()
+    conn.close()
+    if row:
+        return jsonify({
+            'checked_in': row[0] is not None,
+            'checked_out': row[1] is not None,
+            'on_break': row[2] is not None
+        })
+    return jsonify({})
 
 if __name__ == '__main__':
     app.run(debug=True)

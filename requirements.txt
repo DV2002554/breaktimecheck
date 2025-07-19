@@ -1,2 +1,6 @@
-flask
-gunicorn  # For production server
+- server.py
+- requirements.txt
+- templates/
+  - index.html
+- attendance.db (generated at runtime; add to .gitignore to avoid committing data)
+- .gitignore (add sensitive files like auto.json, attendance.db)
