@@ -1,1 +1,9 @@
-git push origin main
+services:
+  - type: web
+    name: breaktimecheck
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn server:app
+    numInstances: 1
+    healthCheckPath: /
