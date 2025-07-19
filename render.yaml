@@ -1,3 +1,9 @@
-flask
-gunicorn==22.0.0
-pytz  # If you're using timezone, add this
+services:
+  - type: web
+    name: breaktimecheck
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn server:app
+    numInstances: 1
+    healthCheckPath: /
