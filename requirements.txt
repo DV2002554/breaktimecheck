@@ -1,3 +1,6 @@
-flask
-gunicorn==22.0.0  # Pinned for compatibility
-pytz  # If using timezones
+- server.py
+- requirements.txt
+- templates/
+  - index.html
+- attendance.db (generated at runtime; add to .gitignore to avoid committing data)
+- .gitignore (add sensitive files like auto.json, attendance.db)

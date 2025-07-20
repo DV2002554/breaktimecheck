@@ -65,7 +65,7 @@
             border-radius: 15px;
             box-shadow: var(--shadow-medium);
             width: 100%;
-            max-width: 1600px; /* Increased for bigger dashboard */
+            max-width: 1800px; /* Increased for bigger dashboard */
             box-sizing: border-box;
             position: relative; /* For z-index to be above background */
             z-index: 1;
@@ -99,15 +99,9 @@
             flex-wrap: wrap;
         }
 
-        .col-md-4 {
-            flex: 0 0 30%;
-            max-width: 30%;
-            padding: 0 15px;
-        }
-
-        .col-md-8 {
-            flex: 0 0 70%;
-            max-width: 70%;
+        .col-md-6 {
+            flex: 0 0 50%;
+            max-width: 50%;
             padding: 0 15px;
         }
 
@@ -122,7 +116,7 @@
         }
 
         button { 
-            margin-right: 15px; 
+            margin-right: 10px; 
             padding: 12px 25px;
             border-radius: 20px;
             font-weight: bold;
@@ -138,6 +132,9 @@
         .btn-warning { background: #ffc107; border: none; color: #333; }
         .btn-danger { background: #dc3545; border: none; }
         .btn-info { background: #17a2b8; border: none; }
+        .btn-upl { background: #dc3545; border: none; color: white; } /* Red for UPL */
+        .btn-sl { background: #6f42c1; border: none; color: white; } /* Purple for SL */
+        .btn-al { background: #28a745; border: none; color: white; } /* Green for AL */
 
         table { 
             margin-top: 30px; 
@@ -202,7 +199,7 @@
     <div class="container">
         <h1>Staff Attendance System</h1>
         <div class="row">
-            <div class="col-md-4">
+            <div class="col-md-6">
                 <h2>Staff History Log</h2>
                 <div class="form-group">
                     <label for="historyStaff">Select Staff for History (type to search):</label>
@@ -219,13 +216,14 @@
                                 <th>Check Out</th>
                                 <th>Break Count</th>
                                 <th>Total Break (min)</th>
+                                <th>Leave Type</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
                     </table>
                 </div>
             </div>
-            <div class="col-md-8">
+            <div class="col-md-6">
                 <div class="form-group">
                     <label for="staff">Select Staff for Actions (type to search):</label>
                     <input type="text" list="staffList" id="staff" class="form-control" placeholder="Type name to search..." autocomplete="off">
@@ -235,10 +233,15 @@
                         {% endfor %}
                     </datalist>
                 </div>
-                <button class="btn btn-success" onclick="performAction('check_in')"><i class="fas fa-sign-in-alt"></i> Check In</button>
-                <button class="btn btn-warning" onclick="performAction('start_break')"><i class="fas fa-coffee"></i> Start Break</button>
-                <button class="btn btn-warning" onclick="performAction('end_break')"><i class="fas fa-play"></i> End Break</button>
-                <button class="btn btn-danger" onclick="performAction('check_out')"><i class="fas fa-sign-out-alt"></i> Check Out</button>
+                <div class="btn-group" role="group">
+                    <button class="btn btn-success" onclick="performAction('check_in')"><i class="fas fa-sign-in-alt"></i> Check In</button>
+                    <button class="btn btn-warning" onclick="performAction('start_break')"><i class="fas fa-coffee"></i> Start Break</button>
+                    <button class="btn btn-warning" onclick="performAction('end_break')"><i class="fas fa-play"></i> End Break</button>
+                    <button class="btn btn-danger" onclick="performAction('check_out')"><i class="fas fa-sign-out-alt"></i> Check Out</button>
+                    <button class="btn btn-upl" onclick="performAction('upl')">UPL</button>
+                    <button class="btn btn-sl" onclick="performAction('sl')">SL</button>
+                    <button class="btn btn-al" onclick="performAction('al')">AL</button>
+                </div>
                 <h2 class="mt-4">Daily Records</h2>
                 <div class="form-group">
                     <label for="datePicker">Select Date for Daily Records:</label>
@@ -255,6 +258,7 @@
                                 <th>Check Out</th>
                                 <th>Break Count</th>
                                 <th>Total Break (min)</th>
+                                <th>Leave Type</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -282,7 +286,7 @@
                 return response.json();
             }).then(data => {
                 if (data.success) {
-                    alert(`${action.replace('_', ' ').toUpperCase()} successful for ${name}`);
+                    alert(`${action.toUpperCase()} successful for ${name}`);
                     nameInput.value = '';  // Clear input after success
                 } else {
                     alert(`Action failed: ${data.message || 'Unknown error'}`);
@@ -313,6 +317,7 @@
                             <td>${row[2] || 'Not checked out'}</td>
                             <td>${row[3]}</td>
                             <td>${row[4].toFixed(2)}</td>
+                            <td>${row[5] || 'None'}</td>
                         `;
                         tbody.appendChild(tr);
                     });
@@ -342,13 +347,28 @@
                     data.forEach(row => {
                         const tr = document.createElement('tr');
                         tr.innerHTML = `
-                            <td>${row[0]}</td>
-                            <td>${row[1] || 'Not checked in'}</td>
-                            <td>${row[2] || 'Not checked out'}</td>
-                            <td>${row[3]}</td>
-                            <td>${row[4].toFixed(2)}</td>
+                            <td>${row.date}</td>
+                            <td>${row.check_in || 'Not checked in'}</td>
+                            <td>${row.check_out || 'Not checked out'}</td>
+                            <td>${row.break_count}</td>
+                            <td>${row.total_break.toFixed(2)}</td>
+                            <td>${row.leave_type || 'None'}</td>
                         `;
                         tbody.appendChild(tr);
+                        if (row.break_history.length > 0) {
+                            const breakTr = document.createElement('tr');
+                            breakTr.innerHTML = `
+                                <td colspan="6">Break Details:</td>
+                            `;
+                            tbody.appendChild(breakTr);
+                            row.break_history.forEach(b => {
+                                const bTr = document.createElement('tr');
+                                bTr.innerHTML = `
+                                    <td colspan="6">Break: Start ${b.start || 'N/A'} - End ${b.end || 'N/A'}</td>
+                                `;
+                                tbody.appendChild(bTr);
+                            });
+                        }
                     });
                     filterTable('historySearchInput', 'historyTable');
                 }).catch(error => {

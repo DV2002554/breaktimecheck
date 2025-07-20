@@ -2,12 +2,16 @@
 # Save and run as described in previous messages.
 # Added pytz for timezone handling (GMT+7, Asia/Bangkok).
 # Added checks for check_in (only if not already checked in without check out) and start_break (only if not already on break).
-# Added /status route to get current status for frontend button disabling.
+# Added new actions: upl, sl, al (marks the day as leave type).
+# Added break_history column to store JSON list of breaks [{'start': time, 'end': time}].
+# Updated action logic to append to break_history.
+# Updated staff_history to include break_history details.
 
 from flask import Flask, render_template, request, jsonify
 import sqlite3
 from datetime import datetime
 import pytz  # For GMT+7 timezone
+import json
 
 app = Flask(__name__)
 
@@ -45,14 +49,25 @@ STAFF_NAMES = sorted([
 # Timezone for GMT+7 (Asia/Bangkok)
 TZ = pytz.timezone('Asia/Bangkok')
 
-# Initialize database
+# Initialize database (added break_history TEXT column for JSON, leave_type TEXT)
 def init_db():
     conn = sqlite3.connect('attendance.db')
     c = conn.cursor()
+    # Create table if not exists
     c.execute('''CREATE TABLE IF NOT EXISTS attendance
                  (name TEXT, date TEXT, check_in TEXT, check_out TEXT,
                   break_count INTEGER DEFAULT 0, total_break REAL DEFAULT 0,
                   current_break_start TEXT, PRIMARY KEY (name, date))''')
+    # Add break_history if not exists
+    try:
+        c.execute("ALTER TABLE attendance ADD COLUMN break_history TEXT DEFAULT '[]'")
+    except sqlite3.OperationalError:
+        pass  # Column already exists
+    # Add leave_type if not exists
+    try:
+        c.execute("ALTER TABLE attendance ADD COLUMN leave_type TEXT")
+    except sqlite3.OperationalError:
+        pass  # Column already exists
     conn.commit()
     conn.close()
 
@@ -92,30 +107,35 @@ def action():
     c = conn.cursor()
 
     # Check current status
-    c.execute("SELECT check_in, check_out, current_break_start FROM attendance WHERE name = ? AND date = ?", (name, today))
+    c.execute("SELECT check_in, check_out, current_break_start, break_history FROM attendance WHERE name = ? AND date = ?", (name, today))
     row = c.fetchone()
     check_in = row[0]
     check_out = row[1]
     current_break_start = row[2]
+    break_history = json.loads(row[3]) if row[3] else []
 
     if act == 'check_in':
         if check_in and not check_out:
             conn.close()
-            return jsonify(success=False, message="Not checked out yet. Please check out first.")
+            return jsonify(success=False, message="Already checked in. Check out first.")
         c.execute("UPDATE attendance SET check_in = ? WHERE name = ? AND date = ?", (now, name, today))
     elif act == 'check_out':
         c.execute("UPDATE attendance SET check_out = ? WHERE name = ? AND date = ?", (now, name, today))
     elif act == 'start_break':
         if current_break_start:
             conn.close()
-            return jsonify(success=False, message="Break not yet ended. Please end break first.")
-        c.execute("UPDATE attendance SET current_break_start = ?, break_count = break_count + 1 WHERE name = ? AND date = ?", (now, name, today))
+            return jsonify(success=False, message="Already on break. End break first.")
+        break_history.append({'start': now, 'end': None})
+        c.execute("UPDATE attendance SET current_break_start = ?, break_count = break_count + 1, break_history = ? WHERE name = ? AND date = ?", (now, json.dumps(break_history), name, today))
     elif act == 'end_break':
         if not current_break_start:
             conn.close()
             return jsonify(success=False, message="No active break to end")
         break_time = (datetime.fromisoformat(now) - datetime.fromisoformat(current_break_start)).total_seconds() / 60  # minutes
-        c.execute("UPDATE attendance SET total_break = total_break + ?, current_break_start = NULL WHERE name = ? AND date = ?", (break_time, name, today))
+        break_history[-1]['end'] = now  # Update last break with end time
+        c.execute("UPDATE attendance SET total_break = total_break + ?, current_break_start = NULL, break_history = ? WHERE name = ? AND date = ?", (break_time, json.dumps(break_history), name, today))
+    elif act in ['upl', 'sl', 'al']:
+        c.execute("UPDATE attendance SET leave_type = ? WHERE name = ? AND date = ?", (act.upper(), name, today))
 
     conn.commit()
     conn.close()
@@ -126,14 +146,15 @@ def records():
     date = request.args.get('date', datetime.now(TZ).date().isoformat())
     conn = sqlite3.connect('attendance.db')
     c = conn.cursor()
-    c.execute("SELECT name, check_in, check_out, break_count, total_break FROM attendance WHERE date = ? ORDER BY name", (date,))
+    c.execute("SELECT name, check_in, check_out, break_count, total_break, leave_type FROM attendance WHERE date = ? ORDER BY name", (date,))
     rows = c.fetchall()
-    # Format timestamps for response (already in TZ since stored as such)
+    # Format timestamps for response
     formatted_rows = []
     for row in rows:
         check_in = datetime.fromisoformat(row[1]).strftime('%Y-%m-%d %H:%M:%S') if row[1] else None
         check_out = datetime.fromisoformat(row[2]).strftime('%Y-%m-%d %H:%M:%S') if row[2] else None
-        formatted_rows.append([row[0], check_in, check_out, row[3], row[4]])
+        total_break = round(row[4], 2) if row[4] is not None else 0.00
+        formatted_rows.append([row[0], check_in, check_out, row[3], total_break, row[5] or None])
     conn.close()
     return jsonify(formatted_rows)
 
@@ -144,35 +165,31 @@ def staff_history():
         return jsonify([])
     conn = sqlite3.connect('attendance.db')
     c = conn.cursor()
-    c.execute("SELECT date, check_in, check_out, break_count, total_break FROM attendance WHERE name = ? ORDER BY date DESC", (name,))
+    c.execute("SELECT date, check_in, check_out, break_count, total_break, break_history, leave_type FROM attendance WHERE name = ? ORDER BY date DESC", (name,))
     rows = c.fetchall()
     # Format timestamps for response
     formatted_rows = []
     for row in rows:
         check_in = datetime.fromisoformat(row[1]).strftime('%Y-%m-%d %H:%M:%S') if row[1] else None
         check_out = datetime.fromisoformat(row[2]).strftime('%Y-%m-%d %H:%M:%S') if row[2] else None
-        formatted_rows.append([row[0], check_in, check_out, row[3], row[4]])
+        break_history = json.loads(row[5]) if row[5] else []
+        formatted_breaks = []
+        for b in break_history:
+            start = datetime.fromisoformat(b['start']).strftime('%H:%M:%S') if b['start'] else 'N/A'
+            end = datetime.fromisoformat(b['end']).strftime('%H:%M:%S') if b['end'] else 'N/A'
+            formatted_breaks.append({'start': start, 'end': end})
+        total_break = round(row[4], 2) if row[4] is not None else 0.00
+        formatted_rows.append({
+            'date': row[0],
+            'check_in': check_in,
+            'check_out': check_out,
+            'break_count': row[3],
+            'total_break': total_break,
+            'break_history': formatted_breaks,
+            'leave_type': row[6] or None
+        })
     conn.close()
     return jsonify(formatted_rows)
-
-@app.route('/status')
-def status():
-    name = request.args.get('name')
-    if not name:
-        return jsonify({})
-    today = datetime.now(TZ).date().isoformat()
-    conn = sqlite3.connect('attendance.db')
-    c = conn.cursor()
-    c.execute("SELECT check_in, check_out, current_break_start FROM attendance WHERE name = ? AND date = ?", (name, today))
-    row = c.fetchone()
-    conn.close()
-    if row:
-        return jsonify({
-            'checked_in': row[0] is not None,
-            'checked_out': row[1] is not None,
-            'on_break': row[2] is not None
-        })
-    return jsonify({})
 
 if __name__ == '__main__':
     app.run(debug=True)
