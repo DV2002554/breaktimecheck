@@ -1,3 +1,4 @@
+# server.py
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 import sqlite3
 from datetime import datetime
@@ -85,8 +86,8 @@ def get_or_create_row(name, date):
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
+        username = request.form.get('username')
+        password = request.form.get('password')
         if username in USERS and USERS[username]['password'] == password:
             session['user'] = username
             session['role'] = USERS[username]['role']
@@ -104,17 +105,22 @@ def logout():
 @app.route('/edit', methods=['POST'])
 def edit():
     if 'role' not in session or session['role'] != 'admin':
-        return jsonify(success=False, message="Admin access required")
-    data = request.json
-    name = data['name']
-    date = data['date']
-    field = data['field']
-    value = data['value'].strip()  # Strip whitespace to prevent invalid ISO format
+        return jsonify({'success': False, 'message': 'Admin access required'})
+    data = request.get_json()
+    if not data:
+        return jsonify({'success': False, 'message': 'No data provided'})
+    name = data.get('name')
+    date = data.get('date')
+    field = data.get('field')
+    value = data.get('value', '').strip()  # Default to empty string and strip whitespace
+
+    if not all([name, date, field, value]):
+        return jsonify({'success': False, 'message': 'Missing required fields'})
 
     conn = sqlite3.connect('attendance.db')
     c = conn.cursor()
     try:
-        if field == 'check_in' or field == 'check_out':
+        if field in ['check_in', 'check_out']:
             # Validate datetime format before updating
             datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
             c.execute(f"UPDATE attendance SET {field} = ? WHERE name = ? AND date = ?", (value, name, date))
@@ -125,20 +131,25 @@ def edit():
         elif field == 'leave_type':
             c.execute("UPDATE attendance SET leave_type = ? WHERE name = ? AND date = ?", (value, name, date))
         elif field == 'break':
-            break_index = int(data['break_index'])  # Convert to int
-            subfield = data['subfield']
+            break_index = int(data.get('break_index', 0))  # Default to 0 if not provided
+            subfield = data.get('subfield', '')
             c.execute("SELECT break_history FROM attendance WHERE name = ? AND date = ?", (name, date))
             row = c.fetchone()
-            break_history = json.loads(row[0]) if row[0] else []
+            break_history = json.loads(row[0]) if row and row[0] else []
             if 0 <= break_index < len(break_history):
                 break_history[break_index][subfield] = value
                 c.execute("UPDATE attendance SET break_history = ? WHERE name = ? AND date = ?", (json.dumps(break_history), name, date))
+            else:
+                return jsonify({'success': False, 'message': 'Invalid break index'})
     except ValueError as e:
         conn.close()
-        return jsonify(success=False, message=f"Invalid value for {field}: {str(e)}")
+        return jsonify({'success': False, 'message': f'Invalid value for {field}: {str(e)}'})
+    except Exception as e:
+        conn.close()
+        return jsonify({'success': False, 'message': f'Error updating record: {str(e)}'})
     conn.commit()
     conn.close()
-    return jsonify(success=True)
+    return jsonify({'success': True})
 
 @app.route('/')
 def index():
@@ -151,11 +162,15 @@ def index():
 
 @app.route('/action', methods=['POST'])
 def action():
-    data = request.json
-    name = data['name']
-    if name not in STAFF_NAMES:
-        return jsonify(success=False, message="Invalid staff name")
-    act = data['action']
+    data = request.get_json()
+    if not data:
+        return jsonify({'success': False, 'message': 'No data provided'})
+    name = data.get('name')
+    if not name or name not in STAFF_NAMES:
+        return jsonify({'success': False, 'message': 'Invalid staff name'})
+    act = data.get('action')
+    if not act:
+        return jsonify({'success': False, 'message': 'No action provided'})
     now = datetime.now(TZ).isoformat()
     today = datetime.now(TZ).date().isoformat()
 
@@ -165,41 +180,41 @@ def action():
     c = conn.cursor()
     c.execute("SELECT check_in, check_out, current_break_start, break_history FROM attendance WHERE name = ? AND date = ?", (name, today))
     row = c.fetchone()
-    check_in = row[0]
-    check_out = row[1]
-    current_break_start = row[2]
-    break_history = json.loads(row[3]) if row[3] else []
+    if not row:
+        conn.close()
+        return jsonify({'success': False, 'message': 'No record found'})
+    check_in, check_out, current_break_start, break_history = row
+    break_history = json.loads(break_history) if break_history else []
 
     if act == 'check_in':
         if check_in and not check_out:
             conn.close()
-            return jsonify(success=False, message="Already checked in. Check out first.")
+            return jsonify({'success': False, 'message': 'Already checked in. Check out first.'})
         c.execute("UPDATE attendance SET check_in = ? WHERE name = ? AND date = ?", (now, name, today))
     elif act == 'check_out':
         c.execute("UPDATE attendance SET check_out = ? WHERE name = ? AND date = ?", (now, name, today))
     elif act == 'start_break':
         if current_break_start:
             conn.close()
-            return jsonify(success=False, message="Already on break. End break first.")
+            return jsonify({'success': False, 'message': 'Already on break. End break first.'})
         break_history.append({'start': now, 'end': None})
         c.execute("UPDATE attendance SET current_break_start = ?, break_count = break_count + 1, break_history = ? WHERE name = ? AND date = ?", (now, json.dumps(break_history), name, today))
     elif act == 'end_break':
         if not current_break_start:
             conn.close()
-            return jsonify(success=False, message="No active break to end")
+            return jsonify({'success': False, 'message': 'No active break to end'})
         break_time = (datetime.fromisoformat(now) - datetime.fromisoformat(current_break_start)).total_seconds() / 60
         break_history[-1]['end'] = now
         c.execute("UPDATE attendance SET total_break = total_break + ?, current_break_start = NULL, break_history = ? WHERE name = ? AND date = ?", (break_time, json.dumps(break_history), name, today))
     elif act in ['upl', 'sl', 'al']:
-        if 'role' in session and session['role'] == 'admin':
-            c.execute("UPDATE attendance SET leave_type = ? WHERE name = ? AND date = ?", (act.upper(), name, today))
-        else:
+        if 'role' not in session or session['role'] != 'admin':
             conn.close()
-            return jsonify(success=False, message="Only admin can set leave types")
+            return jsonify({'success': False, 'message': 'Only admin can set leave types'})
+        c.execute("UPDATE attendance SET leave_type = ? WHERE name = ? AND date = ?", (act.upper(), name, today))
 
     conn.commit()
     conn.close()
-    return jsonify(success=True)
+    return jsonify({'success': True})
 
 @app.route('/records')
 def records():
@@ -232,7 +247,7 @@ def records():
 def staff_history():
     name = request.args.get('name')
     if not name:
-        return jsonify([])
+        return jsonify({'error': 'No name provided'})
     conn = sqlite3.connect('attendance.db')
     c = conn.cursor()
     c.execute("SELECT date, check_in, check_out, break_count, total_break, break_history, leave_type FROM attendance WHERE name = ? ORDER BY date DESC", (name,))
@@ -246,8 +261,12 @@ def staff_history():
             check_in = datetime.strptime(check_in, '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%d %H:%M:%S') if check_in else None
             check_out = datetime.strptime(check_out, '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%d %H:%M:%S') if check_out else None
         except ValueError:
-            check_in = None
-            check_out = None
+            try:
+                check_in = datetime.fromisoformat(check_in).strftime('%Y-%m-%d %H:%M:%S') if check_in else None
+                check_out = datetime.fromisoformat(check_out).strftime('%Y-%m-%d %H:%M:%S') if check_out else None
+            except ValueError:
+                check_in = None
+                check_out = None
         break_history = json.loads(row[5]) if row[5] else []
         formatted_breaks = []
         for b in break_history:

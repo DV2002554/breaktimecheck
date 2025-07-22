@@ -473,18 +473,18 @@
             $('#editForm').off('submit').on('submit', function(e) {
                 e.preventDefault();
                 const field = $('#editField').val();
-                let value = $('#editValue').val().trim(); // Ensure no trailing whitespace
+                let value = $('#editValue').val().trim();
                 const data = { name, date, field, value };
 
                 if (field === 'break') {
                     data.break_index = $('#editBreakIndex').val();
                     data.subfield = $('#editBreakSubfield').val();
-                    value = $('#editValue').val().trim(); // Use trimmed value
+                    value = $('#editValue').val().trim();
                 }
 
                 fetch('/edit', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(data)
                 }).then(response => {
                     if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
