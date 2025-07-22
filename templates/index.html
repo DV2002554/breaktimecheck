@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <title>Staff Attendance System</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"> <!-- For icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"> <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
 
@@ -196,8 +195,8 @@
     <div class="background-animation"></div>
     <div class="container">
         <h1>Staff Attendance System</h1>
-        <div class="d-flex justify-content-end">
-            <a href="{{ url_for('logout') }}" class="btn btn-danger">Logout</a>
+        <div class="d-flex justify-content-end mb-3">
+            <a href="{{ url_for('logout') }}" class="btn btn-danger"><i class="fas fa-sign-out-alt"></i> Logout</a>
         </div>
         <div class="row">
             <div class="col-md-6">
@@ -242,15 +241,13 @@
                     <button class="btn btn-upl" onclick="performAction('upl')" {% if role != 'admin' %}disabled{% endif %}>UPL</button>
                     <button class="btn btn-sl" onclick="performAction('sl')" {% if role != 'admin' %}disabled{% endif %}>SL</button>
                     <button class="btn btn-al" onclick="performAction('al')" {% if role != 'admin' %}disabled{% endif %}>AL</button>
-                    {% if role == 'admin' %}
-                        <button class="btn btn-info" onclick="showEditModal()">Edit All</button>
-                    {% endif %}
+                    {# Removed the "Edit All" button as individual row edit is more practical #}
                 </div>
                 <h2 class="mt-4">Daily Records</h2>
                 <div class="form-group">
                     <label for="datePicker">Select Date for Daily Records:</label>
                     <input type="date" id="datePicker" class="form-control" value="{{ today }}">
-                    <button class="btn btn-info mt-2" onclick="loadRecords()">Load Records</button>
+                    <button class="btn btn-info mt-2" onclick="loadRecords()"><i class="fas fa-calendar-alt"></i> Load Records</button>
                     <input type="text" id="dailySearchInput" class="form-control mt-2" placeholder="Search by name...">
                 </div>
                 <div class="table-responsive">
@@ -263,8 +260,7 @@
                                 <th>Break Count</th>
                                 <th>Total Break (min)</th>
                                 <th>Leave Type</th>
-                                <th>Action</th>  <!-- Individual Edit button per row -->
-                            </tr>
+                                <th>Action</th>  </tr>
                         </thead>
                         <tbody></tbody>
                     </table>
@@ -273,7 +269,6 @@
         </div>
     </div>
 
-    <!-- Edit Modal -->
     {% if role == 'admin' %}
     <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -281,44 +276,44 @@
                 <div class="modal-header">
                     <h5 class="modal-title" id="editModalLabel">Edit Record</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">×</span>
+                        <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
                     <form id="editForm">
                         <div class="form-group">
                             <label for="editName">Name</label>
-                            <input type="text" class="form-control" id="editName" required>
+                            <input type="text" class="form-control" id="editName" readonly required> {# Made readonly #}
                         </div>
                         <div class="form-group">
                             <label for="editDate">Date</label>
-                            <input type="date" class="form-control" id="editDate" required>
+                            <input type="date" class="form-control" id="editDate" readonly required> {# Made readonly #}
                         </div>
                         <div class="form-group">
                             <label for="editField">Field</label>
                             <select class="form-control" id="editField">
-                                <option value="check_in">Check In</option>
-                                <option value="check_out">Check Out</option>
+                                <option value="check_in">Check In (YYYY-MM-DD HH:MM:SS)</option>
+                                <option value="check_out">Check Out (YYYY-MM-DD HH:MM:SS)</option>
                                 <option value="break_count">Break Count</option>
-                                <option value="total_break">Total Break</option>
-                                <option value="leave_type">Leave Type</option>
-                                <option value="break">Break</option>
+                                <option value="total_break">Total Break (min)</option>
+                                <option value="leave_type">Leave Type (UPL, SL, AL, None)</option>
+                                <option value="break">Specific Break Time (Use Break Index & Start/End)</option>
                             </select>
                         </div>
                         <div class="form-group" id="breakFields" style="display: none;">
-                            <label>Break Index</label>
-                            <input type="number" class="form-control" id="editBreakIndex" min="0">
-                            <label>Subfield (start/end)</label>
+                            <label for="editBreakIndex">Break Index (0-indexed)</label>
+                            <input type="number" class="form-control" id="editBreakIndex" min="0" value="0">
+                            <label for="editBreakSubfield">Subfield (start/end)</label>
                             <select class="form-control" id="editBreakSubfield">
-                                <option value="start">Start</option>
-                                <option value="end">End</option>
+                                <option value="start">Start (HH:MM:SS)</option>
+                                <option value="end">End (HH:MM:SS)</option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label for="editValue">New Value</label>
-                            <input type="text" class="form-control" id="editValue" required>
+                            <input type="text" class="form-control" id="editValue" placeholder="Enter new value" required>
                         </div>
-                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Changes</button>
                     </form>
                 </div>
             </div>
@@ -329,6 +324,18 @@
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load records on page load
+            loadRecords();
+
+            // Setup search inputs
+            document.getElementById('dailySearchInput').addEventListener('keyup', () => filterTable('dailySearchInput', 'recordsTable'));
+            document.getElementById('historySearchInput').addEventListener('keyup', () => filterTable('historySearchInput', 'historyTable'));
+
+            // Auto-refresh daily records every 30 seconds
+            setInterval(loadRecords, 30000); // Only refresh daily records
+        });
+
         function performAction(action) {
             const nameInput = document.getElementById('staff');
             const name = nameInput.value.trim();
@@ -336,18 +343,20 @@
                 alert('Please select or type a staff name.');
                 return;
             }
+
             fetch('/action', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({name: name, action: action})
             }).then(response => {
                 if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
+                    // Check if response is JSON, otherwise read as text
+                    return response.text().then(text => { throw new Error(text); });
                 }
                 return response.json();
             }).then(data => {
                 if (data.success) {
-                    alert(`${action.toUpperCase()} successful for ${name}`);
+                    alert(`${action.toUpperCase().replace('_', ' ')} successful for ${name}`);
                     nameInput.value = '';  // Clear input after success
                     loadRecords(); // Refresh records after action
                 } else {
@@ -364,7 +373,7 @@
             fetch(`/records?date=${selectedDate}`)
                 .then(response => {
                     if (!response.ok) {
-                        throw new Error(`HTTP error! Status: ${response.status}`);
+                        return response.text().then(text => { throw new Error(text); });
                     }
                     return response.json();
                 })
@@ -388,6 +397,7 @@
                         `;
                         tbody.appendChild(tr);
                     });
+                    // Apply filter after loading records
                     filterTable('dailySearchInput', 'recordsTable');
                 }).catch(error => {
                     console.error('Error loading records:', error);
@@ -404,7 +414,7 @@
             fetch(`/staff_history?name=${encodeURIComponent(name)}`)
                 .then(response => {
                     if (!response.ok) {
-                        throw new Error(`HTTP error! Status: ${response.status}`);
+                        return response.text().then(text => { throw new Error(text); });
                     }
                     return response.json();
                 })
@@ -415,32 +425,36 @@
                         alert(data.error);
                         return;
                     }
+                    if (data.length === 0) {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `<td colspan="6">No history found for ${name}.</td>`;
+                        tbody.appendChild(tr);
+                        filterTable('historySearchInput', 'historyTable'); // Still apply filter
+                        return;
+                    }
                     data.forEach(row => {
                         const tr = document.createElement('tr');
                         tr.innerHTML = `
                             <td>${row.date}</td>
-                            <td>${row.check_in || 'Not checked in'}</td>
-                            <td>${row.check_out || 'Not checked out'}</td>
+                            <td>${row.check_in || 'N/A'}</td>
+                            <td>${row.check_out || 'N/A'}</td>
                             <td>${row.break_count}</td>
                             <td>${row.total_break.toFixed(2)}</td>
                             <td>${row.leave_type || 'None'}</td>
                         `;
                         tbody.appendChild(tr);
-                        if (row.break_history.length > 0) {
+                        if (row.break_history && row.break_history.length > 0) {
                             const breakTr = document.createElement('tr');
+                            // Use row.name for searching even in break details for history search
                             breakTr.innerHTML = `
-                                <td colspan="6">Break Details:</td>
+                                <td colspan="6" class="text-muted small">
+                                    Breaks: ${row.break_history.map(b => `Start: ${b.start || 'N/A'} End: ${b.end || 'N/A'}`).join('; ')}
+                                </td>
                             `;
                             tbody.appendChild(breakTr);
-                            row.break_history.forEach(b => {
-                                const bTr = document.createElement('tr');
-                                bTr.innerHTML = `
-                                    <td colspan="6">Break: Start ${b.start || 'N/A'} - End ${b.end || 'N/A'}</td>
-                                `;
-                                tbody.appendChild(bTr);
-                            });
                         }
                     });
+                    // Apply filter after loading history
                     filterTable('historySearchInput', 'historyTable');
                 }).catch(error => {
                     console.error('Error loading history:', error);
@@ -453,13 +467,26 @@
             const filter = input.value.toUpperCase();
             const table = document.getElementById(tableId);
             const tr = table.getElementsByTagName('tr');
-            for (let i = 1; i < tr.length; i++) {
+            for (let i = 1; i < tr.length; i++) { // Start from 1 to skip header row
                 let visible = false;
                 const td = tr[i].getElementsByTagName('td');
-                for (let j = 0; j < td.length; j++) {
-                    if (td[j] && td[j].textContent.toUpperCase().indexOf(filter) > -1) {
-                        visible = true;
-                        break;
+                // Check if it's a "break details" row, and match it if its parent staff row is visible
+                const isBreakDetailRow = tr[i].querySelector('.text-muted.small');
+                if (isBreakDetailRow) {
+                    // For break detail rows, we'll check if the previous row (staff row) is visible.
+                    // This is a simple heuristic; a more robust solution might link them by data attributes.
+                    if (i > 0 && tr[i-1].style.display !== "none") {
+                         // Also allow filtering within the break details text itself
+                        if (isBreakDetailRow.textContent.toUpperCase().indexOf(filter) > -1) {
+                            visible = true;
+                        }
+                    }
+                } else {
+                    for (let j = 0; j < td.length; j++) {
+                        if (td[j] && td[j].textContent.toUpperCase().indexOf(filter) > -1) {
+                            visible = true;
+                            break;
+                        }
                     }
                 }
                 tr[i].style.display = visible ? "" : "none";
@@ -470,6 +497,11 @@
             $('#editModal').modal('show');
             $('#editName').val(name);
             $('#editDate').val(date);
+            // Reset fields and hide break-specific fields on modal open
+            $('#editField').val('check_in');
+            $('#editValue').val('');
+            $('#breakFields').hide();
+
             $('#editForm').off('submit').on('submit', function(e) {
                 e.preventDefault();
                 const field = $('#editField').val();
@@ -479,21 +511,59 @@
                 if (field === 'break') {
                     data.break_index = $('#editBreakIndex').val();
                     data.subfield = $('#editBreakSubfield').val();
-                    value = $('#editValue').val().trim();
+                    if (data.break_index === '' || data.subfield === '') {
+                        alert('Break Index and Subfield are required for "Specific Break Time" edits.');
+                        return;
+                    }
+                    // Validate time format for break start/end
+                    const timeRegex = /^(?:2[0-3]|[01]?[0-9]):(?:[0-5]?[0-9]):(?:[0-5]?[0-9])$/;
+                    if (!timeRegex.test(value)) {
+                        alert('Please enter break time in HH:MM:SS format (e.g., 08:30:00).');
+                        return;
+                    }
+                } else if (field === 'check_in' || field === 'check_out') {
+                    const datetimeRegex = /^\d{4}-\d{2}-\d{2} (?:2[0-3]|[01]?[0-9]):(?:[0-5]?[0-9]):(?:[0-5]?[0-9])$/;
+                    if (!datetimeRegex.test(value)) {
+                        alert('Please enter date and time in YYYY-MM-DD HH:MM:SS format (e.g., 2025-07-22 08:30:00).');
+                        return;
+                    }
+                } else if (field === 'break_count') {
+                    if (isNaN(parseInt(value)) || parseInt(value) < 0) {
+                        alert('Break Count must be a non-negative integer.');
+                        return;
+                    }
+                    value = parseInt(value);
+                } else if (field === 'total_break') {
+                    if (isNaN(parseFloat(value)) || parseFloat(value) < 0) {
+                        alert('Total Break must be a non-negative number.');
+                        return;
+                    }
+                    value = parseFloat(value);
+                } else if (field === 'leave_type') {
+                    const validLeaveTypes = ['UPL', 'SL', 'AL', 'None', ''];
+                    if (!validLeaveTypes.includes(value) && !validLeaveTypes.includes(value.toUpperCase())) {
+                        alert('Invalid Leave Type. Please use UPL, SL, AL, or None.');
+                        return;
+                    }
+                    value = value.toUpperCase(); // Normalize to uppercase
                 }
+
 
                 fetch('/edit', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(data)
                 }).then(response => {
-                    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                    if (!response.ok) {
+                        return response.text().then(text => { throw new Error(text); });
+                    }
                     return response.json();
                 }).then(data => {
                     if (data.success) {
                         alert('Record updated successfully');
                         $('#editModal').modal('hide');
-                        loadRecords();
+                        loadRecords(); // Refresh daily records table
+                        loadStaffHistory(); // Refresh history table if visible (might need to re-select staff)
                     } else {
                         alert('Error: ' + data.message);
                     }
@@ -506,19 +576,18 @@
             $('#editField').on('change', function() {
                 if ($(this).val() === 'break') {
                     $('#breakFields').show();
+                    // Set placeholder for time format for consistency
+                    $('#editValue').attr('placeholder', 'HH:MM:SS');
+                } else if ($(this).val() === 'check_in' || $(this).val() === 'check_out') {
+                    $('#breakFields').hide();
+                    // Set placeholder for datetime format for consistency
+                    $('#editValue').attr('placeholder', 'YYYY-MM-DD HH:MM:SS');
                 } else {
                     $('#breakFields').hide();
+                    $('#editValue').attr('placeholder', 'Enter new value');
                 }
             });
         }
-
-        document.getElementById('dailySearchInput').addEventListener('keyup', () => filterTable('dailySearchInput', 'recordsTable'));
-        document.getElementById('historySearchInput').addEventListener('keyup', () => filterTable('historySearchInput', 'historyTable'));
-
-        // Load records on page load (optional, or remove if only on button)
-        // loadRecords();
-        // Auto-refresh daily records every 30 seconds (comment if not needed)
-        // setInterval(loadRecords, 30000);
     </script>
 </body>
 </html>
