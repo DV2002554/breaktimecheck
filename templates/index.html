@@ -1,4 +1,3 @@
-<!-- templates/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -20,7 +19,7 @@
             --light-text-color: #666;
             --bg-light: #f7f9fc;
             --bg-dark: #e0e6ec;
-            --card-bg: #ffffff;
+            --card-bg: #d3d3d3; /* Gray dashboard background */
             --border-color: #e0e0e0;
             --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.1);
             --shadow-medium: 0 8px 25px rgba(0, 0, 0, 0.15);
@@ -35,11 +34,10 @@
             align-items: center;
             min-height: 100vh;
             color: var(--text-color);
-            overflow-x: hidden; /* Prevent horizontal scroll from animation */
-            background: linear-gradient(135deg, #a7b7c7, #c4d0d9, #dfe9f0); /* Base gradient */
+            overflow-x: hidden;
+            background: linear-gradient(135deg, #a7b7c7, #c4d0d9, #dfe9f0);
         }
 
-        /* Background Animation */
         .background-animation {
             position: fixed;
             top: 0;
@@ -58,16 +56,15 @@
             100% { background-position: 0% 50%; }
         }
 
-
         .container {
             background-color: var(--card-bg);
             padding: 40px 50px;
             border-radius: 15px;
             box-shadow: var(--shadow-medium);
             width: 100%;
-            max-width: 1800px; /* Increased for bigger dashboard */
+            max-width: 1800px;
             box-sizing: border-box;
-            position: relative; /* For z-index to be above background */
+            position: relative;
             z-index: 1;
             animation: fadeIn 1s ease-out;
         }
@@ -105,8 +102,8 @@
             padding: 0 15px;
         }
 
-        .form-group { 
-            margin-bottom: 30px; 
+        .form-group {
+            margin-bottom: 30px;
         }
 
         .form-control {
@@ -115,8 +112,8 @@
             box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
         }
 
-        button { 
-            margin-right: 10px; 
+        button {
+            margin-right: 10px;
             padding: 12px 25px;
             border-radius: 20px;
             font-weight: bold;
@@ -132,12 +129,12 @@
         .btn-warning { background: #ffc107; border: none; color: #333; }
         .btn-danger { background: #dc3545; border: none; }
         .btn-info { background: #17a2b8; border: none; }
-        .btn-upl { background: #dc3545; border: none; color: white; } /* Red for UPL */
-        .btn-sl { background: #6f42c1; border: none; color: white; } /* Purple for SL */
-        .btn-al { background: #28a745; border: none; color: white; } /* Green for AL */
+        .btn-upl { background: #dc3545; border: none; color: white; }
+        .btn-sl { background: #6f42c1; border: none; color: white; }
+        .btn-al { background: #28a745; border: none; color: white; }
 
-        table { 
-            margin-top: 30px; 
+        table {
+            margin-top: 30px;
             border-radius: 10px;
             overflow: hidden;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
@@ -146,13 +143,16 @@
         thead.thead-dark {
             background: #343a40;
             color: white;
+            position: sticky;
+            top: 0;
+            z-index: 1;
         }
 
         th, td {
             vertical-align: middle;
             padding: 15px;
-            word-wrap: break-word; /* Added to wrap long content */
-            max-width: 300px; /* Prevent too wide cells */
+            word-wrap: break-word;
+            max-width: 300px;
         }
 
         tbody tr:nth-child(odd) {
@@ -164,13 +164,11 @@
             transition: background 0.3s;
         }
 
-        /* Scrollable table for many rows */
         .table-responsive {
             max-height: 600px;
             overflow-y: auto;
         }
 
-        /* Add some animations */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
@@ -198,6 +196,9 @@
     <div class="background-animation"></div>
     <div class="container">
         <h1>Staff Attendance System</h1>
+        <div class="d-flex justify-content-end">
+            <a href="{{ url_for('logout') }}" class="btn btn-danger">Logout</a>
+        </div>
         <div class="row">
             <div class="col-md-6">
                 <h2>Staff History Log</h2>
@@ -238,9 +239,12 @@
                     <button class="btn btn-warning" onclick="performAction('start_break')"><i class="fas fa-coffee"></i> Start Break</button>
                     <button class="btn btn-warning" onclick="performAction('end_break')"><i class="fas fa-play"></i> End Break</button>
                     <button class="btn btn-danger" onclick="performAction('check_out')"><i class="fas fa-sign-out-alt"></i> Check Out</button>
-                    <button class="btn btn-upl" onclick="performAction('upl')">UPL</button>
-                    <button class="btn btn-sl" onclick="performAction('sl')">SL</button>
-                    <button class="btn btn-al" onclick="performAction('al')">AL</button>
+                    <button class="btn btn-upl" onclick="performAction('upl')" {% if role != 'admin' %}disabled{% endif %}>UPL</button>
+                    <button class="btn btn-sl" onclick="performAction('sl')" {% if role != 'admin' %}disabled{% endif %}>SL</button>
+                    <button class="btn btn-al" onclick="performAction('al')" {% if role != 'admin' %}disabled{% endif %}>AL</button>
+                    {% if role == 'admin' %}
+                        <button class="btn btn-info" onclick="showEditModal()">Edit All</button>
+                    {% endif %}
                 </div>
                 <h2 class="mt-4">Daily Records</h2>
                 <div class="form-group">
@@ -259,6 +263,7 @@
                                 <th>Break Count</th>
                                 <th>Total Break (min)</th>
                                 <th>Leave Type</th>
+                                <th>Action</th>  <!-- Individual Edit button per row -->
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -267,6 +272,62 @@
             </div>
         </div>
     </div>
+
+    <!-- Edit Modal -->
+    {% if role == 'admin' %}
+    <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editModalLabel">Edit Record</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm">
+                        <div class="form-group">
+                            <label for="editName">Name</label>
+                            <input type="text" class="form-control" id="editName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editDate">Date</label>
+                            <input type="date" class="form-control" id="editDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editField">Field</label>
+                            <select class="form-control" id="editField">
+                                <option value="check_in">Check In</option>
+                                <option value="check_out">Check Out</option>
+                                <option value="break_count">Break Count</option>
+                                <option value="total_break">Total Break</option>
+                                <option value="leave_type">Leave Type</option>
+                                <option value="break">Break</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="breakFields" style="display: none;">
+                            <label>Break Index</label>
+                            <input type="number" class="form-control" id="editBreakIndex" min="0">
+                            <label>Subfield (start/end)</label>
+                            <select class="form-control" id="editBreakSubfield">
+                                <option value="start">Start</option>
+                                <option value="end">End</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="editValue">New Value</label>
+                            <input type="text" class="form-control" id="editValue" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         function performAction(action) {
             const nameInput = document.getElementById('staff');
@@ -288,6 +349,7 @@
                 if (data.success) {
                     alert(`${action.toUpperCase()} successful for ${name}`);
                     nameInput.value = '';  // Clear input after success
+                    loadRecords(); // Refresh records after action
                 } else {
                     alert(`Action failed: ${data.message || 'Unknown error'}`);
                 }
@@ -318,6 +380,11 @@
                             <td>${row[3]}</td>
                             <td>${row[4].toFixed(2)}</td>
                             <td>${row[5] || 'None'}</td>
+                            <td>
+                                {% if role == 'admin' %}
+                                    <button class="btn btn-info btn-sm" onclick="showEditModal('${row[0]}', '${selectedDate}')">Edit</button>
+                                {% endif %}
+                            </td>
                         `;
                         tbody.appendChild(tr);
                     });
@@ -344,6 +411,10 @@
                 .then(data => {
                     const tbody = document.querySelector('#historyTable tbody');
                     tbody.innerHTML = '';
+                    if (data.error) {
+                        alert(data.error);
+                        return;
+                    }
                     data.forEach(row => {
                         const tr = document.createElement('tr');
                         tr.innerHTML = `
@@ -382,7 +453,7 @@
             const filter = input.value.toUpperCase();
             const table = document.getElementById(tableId);
             const tr = table.getElementsByTagName('tr');
-            for (let i = 1; i < tr.length; i++) {  // Skip header row
+            for (let i = 1; i < tr.length; i++) {
                 let visible = false;
                 const td = tr[i].getElementsByTagName('td');
                 for (let j = 0; j < td.length; j++) {
@@ -393,6 +464,52 @@
                 }
                 tr[i].style.display = visible ? "" : "none";
             }
+        }
+
+        function showEditModal(name, date) {
+            $('#editModal').modal('show');
+            $('#editName').val(name);
+            $('#editDate').val(date);
+            $('#editForm').off('submit').on('submit', function(e) {
+                e.preventDefault();
+                const field = $('#editField').val();
+                let value = $('#editValue').val().trim(); // Ensure no trailing whitespace
+                const data = { name, date, field, value };
+
+                if (field === 'break') {
+                    data.break_index = $('#editBreakIndex').val();
+                    data.subfield = $('#editBreakSubfield').val();
+                    value = $('#editValue').val().trim(); // Use trimmed value
+                }
+
+                fetch('/edit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                }).then(response => {
+                    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                    return response.json();
+                }).then(data => {
+                    if (data.success) {
+                        alert('Record updated successfully');
+                        $('#editModal').modal('hide');
+                        loadRecords();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                }).catch(error => {
+                    console.error('Edit error:', error);
+                    alert('Error editing record: ' + error.message);
+                });
+            });
+
+            $('#editField').on('change', function() {
+                if ($(this).val() === 'break') {
+                    $('#breakFields').show();
+                } else {
+                    $('#breakFields').hide();
+                }
+            });
         }
 
         document.getElementById('dailySearchInput').addEventListener('keyup', () => filterTable('dailySearchInput', 'recordsTable'));
